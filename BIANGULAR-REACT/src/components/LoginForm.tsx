@@ -1,26 +1,46 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
-import { Eye, EyeOff, Mail, Lock, Building } from "lucide-react";
+import { Eye, EyeOff, User, Lock, Building } from "lucide-react";
 import { toast } from "sonner";
+import { useAuth } from "@/contexts/AuthContext";
 
 const LoginForm = () => {
-  const [email, setEmail] = useState("");
+  const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const { login } = useAuth();
+  const navigate = useNavigate();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    if (!username.trim() || !password.trim()) {
+      toast.error("Por favor ingresa tu usuario y contraseña");
+      return;
+    }
+
     setIsLoading(true);
 
-    // Simulate login process
-    setTimeout(() => {
+    try {
+      const success = await login(username.trim(), password);
+      
+      if (success) {
+        toast.success("¡Bienvenido a ALESE CORP!");
+        navigate("/dashboard");
+      } else {
+        toast.error("Credenciales incorrectas o usuario inactivo");
+      }
+    } catch (error) {
+      console.error("Login error:", error);
+      toast.error("Error de conexión. Verifica tu conexión a internet.");
+    } finally {
       setIsLoading(false);
-      toast.success("Bienvenido a ALESE CORP");
-    }, 1500);
+    }
   };
 
   return (
@@ -54,17 +74,17 @@ const LoginForm = () => {
           <CardContent className="space-y-6 pb-8">
             <form onSubmit={handleSubmit} className="space-y-6">
               <div className="space-y-2">
-                <Label htmlFor="email" className="text-sm font-medium text-gray-700">
-                  Correo Corporativo
+                <Label htmlFor="username" className="text-sm font-medium text-gray-700">
+                  Usuario
                 </Label>
                 <div className="relative">
-                  <Mail className="absolute left-3 top-3 h-5 w-5 text-gray-400" />
+                  <User className="absolute left-3 top-3 h-5 w-5 text-gray-400" />
                   <Input
-                    id="email"
-                    type="email"
-                    placeholder="alexander2"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
+                    id="username"
+                    type="text"
+                    placeholder="Ingresa tu usuario"
+                    value={username}
+                    onChange={(e) => setUsername(e.target.value)}
                     className="pl-10 h-12 border-gray-200 bg-gray-50 focus:border-primary focus:bg-white transition-all"
                     required
                   />
@@ -124,7 +144,7 @@ const LoginForm = () => {
 
             <div className="text-center space-y-2 pt-4 border-t border-gray-200">
               <p className="text-xs text-gray-500">
-                © 2024 ALESE CORP - Sistema Corporativo Perú
+                © 2025 ALESE CORP - Sistema Corporativo Perú
               </p>
               <p className="text-xs text-gray-500">
                 Todos los derechos reservados
