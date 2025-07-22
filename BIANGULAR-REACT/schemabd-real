@@ -1,0 +1,87 @@
+/*
+ Navicat Premium Dump SQL
+
+ Source Server         : VENTAS
+ Source Server Type    : MySQL
+ Source Server Version : 100620 (10.6.20-MariaDB-cll-lve)
+ Source Host           : 50.31.188.163:3306
+ Source Schema         : xqkefqsh_alesecorp_ventas
+
+ Target Server Type    : MySQL
+ Target Server Version : 100620 (10.6.20-MariaDB-cll-lve)
+ File Encoding         : 65001
+
+ Date: 22/07/2025 11:44:38
+*/
+
+SET NAMES utf8mb4;
+SET FOREIGN_KEY_CHECKS = 0;
+
+-- ----------------------------
+-- Table structure for ___________________________permisos
+-- ----------------------------
+DROP TABLE IF EXISTS `___________________________permisos`;
+CREATE TABLE `___________________________permisos`  (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `UsuCod` varchar(25) CHARACTER SET latin1 COLLATE latin1_swedish_ci NOT NULL,
+  `idmenu` int NOT NULL,
+  PRIMARY KEY (`id`) USING BTREE
+) ENGINE = InnoDB AUTO_INCREMENT = 411 CHARACTER SET = latin1 COLLATE = latin1_swedish_ci ROW_FORMAT = Dynamic;
+
+-- ----------------------------
+-- Table structure for menus
+-- ----------------------------
+DROP TABLE IF EXISTS `menus`;
+CREATE TABLE `menus`  (
+  `idmenu` int NOT NULL AUTO_INCREMENT,
+  `menu` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL,
+  `vista` text CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL,
+  `icono` varchar(15) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL,
+  `estado` char(1) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT '1',
+  `url` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL,
+  `ancho` varchar(200) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL,
+  `alto` varchar(11) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL,
+  `parent` int NULL DEFAULT NULL,
+  PRIMARY KEY (`idmenu`) USING BTREE
+) ENGINE = InnoDB AUTO_INCREMENT = 70502 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci ROW_FORMAT = DYNAMIC;
+
+-- ----------------------------
+-- Table structure for perfil_menus
+-- ----------------------------
+DROP TABLE IF EXISTS `perfil_menus`;
+CREATE TABLE `perfil_menus`  (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `idperfil` int NULL DEFAULT NULL,
+  `idmenu` int NULL DEFAULT NULL,
+  PRIMARY KEY (`id`) USING BTREE
+) ENGINE = MyISAM AUTO_INCREMENT = 1054 CHARACTER SET = utf8mb3 COLLATE = utf8mb3_unicode_ci ROW_FORMAT = Fixed;
+
+-- ----------------------------
+-- Table structure for perfiles
+-- ----------------------------
+DROP TABLE IF EXISTS `perfiles`;
+CREATE TABLE `perfiles`  (
+  `idperfil` int NOT NULL AUTO_INCREMENT,
+  `perfil` varchar(60) CHARACTER SET utf8mb3 COLLATE utf8mb3_unicode_ci NULL DEFAULT NULL,
+  `activo` int NULL DEFAULT NULL,
+  PRIMARY KEY (`idperfil`) USING BTREE
+) ENGINE = MyISAM AUTO_INCREMENT = 54 CHARACTER SET = utf8mb3 COLLATE = utf8mb3_unicode_ci ROW_FORMAT = Dynamic;
+
+-- ----------------------------
+-- Table structure for usuarios
+-- ----------------------------
+DROP TABLE IF EXISTS `usuarios`;
+CREATE TABLE `usuarios`  (
+  `UsuCod` varchar(25) CHARACTER SET latin1 COLLATE latin1_swedish_ci NOT NULL,
+  `UsuNom` varchar(25) CHARACTER SET latin1 COLLATE latin1_swedish_ci NOT NULL,
+  `UsuApePat` varchar(25) CHARACTER SET latin1 COLLATE latin1_swedish_ci NULL DEFAULT NULL,
+  `UsuApeMat` varchar(25) CHARACTER SET latin1 COLLATE latin1_swedish_ci NULL DEFAULT NULL,
+  `UsuEmail` varchar(50) CHARACTER SET latin1 COLLATE latin1_swedish_ci NULL DEFAULT NULL,
+  `UsuClave` varchar(50) CHARACTER SET latin1 COLLATE latin1_swedish_ci NOT NULL,
+  `UsuPerfil` varchar(150) CHARACTER SET latin1 COLLATE latin1_swedish_ci NULL DEFAULT NULL,
+  `UsuEst` varchar(3) CHARACTER SET latin1 COLLATE latin1_swedish_ci NOT NULL,
+  `idperfil` int NULL DEFAULT NULL,
+  PRIMARY KEY (`UsuCod`) USING BTREE
+) ENGINE = InnoDB CHARACTER SET = latin1 COLLATE = latin1_swedish_ci ROW_FORMAT = Dynamic;
+
+SET FOREIGN_KEY_CHECKS = 1;
