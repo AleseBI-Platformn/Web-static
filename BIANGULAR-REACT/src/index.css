@@ -39,8 +39,8 @@ All colors MUST be HSL.
     --input: 214.3 31.8% 91.4%;
     --ring: 212 72% 35%;
 
-    /* Corporate Gradients */
-    --gradient-primary: linear-gradient(135deg, hsl(212 72% 40%), hsl(205 82% 55%));
+    /* Corporate Gradients - Updated for better look */
+    --gradient-primary: linear-gradient(135deg, #3b82f6, #1d4ed8, #1e40af);
     --gradient-light: linear-gradient(135deg, hsl(212 72% 95%), hsl(205 82% 90%));
 
     /* Shadows */
