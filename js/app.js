@@ -10,6 +10,7 @@ createApp({
                 username: '',
                 password: ''
             },
+            rememberMe: false,
             
             // UI state
             loading: false,

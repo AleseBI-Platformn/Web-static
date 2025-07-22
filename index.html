@@ -17,17 +17,21 @@
             <div class="login-box">
                 <div class="login-header">
                     <img src="assets/img/alese-logo.png" alt="Alese Analytics" class="logo">
-                    <h1>Alese Analytics</h1>
+                    <h1>ALESE CORP</h1>
                     <p>Business Intelligence Platform</p>
                 </div>
+                <div class="login-subtitle">Ingrese sus credenciales corporativas</div>
                 <form @submit.prevent="login" class="login-form">
                     <div class="form-group">
+                        <label class="form-label">
+                            <i class="fas fa-envelope"></i>
+                            Correo Electrónico
+                        </label>
                         <div class="input-group">
-                            <i class="fas fa-user"></i>
                             <input 
-                                type="text" 
+                                type="email" 
                                 v-model="credentials.username" 
-                                placeholder="Usuario" 
+                                placeholder="usuario@alesecorp.com" 
                                 required
                                 :disabled="loading"
                                 autocomplete="username"
@@ -35,20 +39,28 @@
                         </div>
                     </div>
                     <div class="form-group">
-                        <div class="input-group">
+                        <label class="form-label">
                             <i class="fas fa-lock"></i>
+                            Contraseña
+                        </label>
+                        <div class="input-group">
                             <input 
                                 type="password" 
                                 v-model="credentials.password" 
-                                placeholder="Contraseña" 
+                                placeholder="Ingrese su contraseña" 
                                 required
                                 :disabled="loading"
                                 autocomplete="current-password"
                             >
                         </div>
                     </div>
+                    <div class="checkbox-group">
+                        <input type="checkbox" id="remember" v-model="rememberMe">
+                        <label for="remember">Mantener sesión iniciada</label>
+                    </div>
                     <button type="submit" class="btn-login" :disabled="loading">
-                        <span v-if="!loading">Iniciar Sesión</span>
+                        <i class="fas fa-sign-in-alt"></i>
+                        <span v-if="!loading">INICIAR SESIÓN</span>
                         <span v-else>
                             <i class="fas fa-spinner fa-spin"></i>
                             Verificando...
@@ -59,6 +71,15 @@
                         {{ error }}
                     </div>
                 </form>
+            </div>
+            
+            <!-- Footer corporativo -->
+            <div class="login-footer">
+                <div class="copyright">© 2025 ALESE SAC • Grupo ALESE</div>
+                <div class="platform-name">Business Intelligence & Analytics Platform</div>
+                <a href="https://www.linkedin.com/in/yea-software-124247376" target="_blank" class="developer">
+                    </> Desarrollado por YEA Software Studio v2.0.0
+                </a>
             </div>
         </div>
 
