@@ -24,7 +24,7 @@ const Dashboard: React.FC = () => {
               <div className="flex items-center">
                 <div className="flex-shrink-0">
                   <img 
-                    src="/alese-logo.png" 
+                    src="/assets/img/alese-logo.png" 
                     alt="ALESE CORP" 
                     className="h-16 w-auto"
                   />

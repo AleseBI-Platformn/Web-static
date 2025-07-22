@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { aleseCorpApi, MenuItem } from '../services/aleseCorpApi_php_only';
+import { aleseCorpApi, MenuItem } from '../services/aleseCorpApi';
 import { useAuth } from '../contexts/AuthContext';
 
 export const useMenus = () => {
@@ -22,10 +22,10 @@ export const useMenus = () => {
         console.log('📋 Obteniendo menús desde MySQL para permisos:', permissions);
         
         // Obtener menús directamente desde MySQL
-        const menusResponse = await aleseCorpApi.getMenus(permissions);
+        const menuData = await aleseCorpApi.getMenus(permissions);
         
-        setMenus(menusResponse);
-        console.log('✅ Menús obtenidos exitosamente:', menusResponse.length);
+        setMenus(menuData);
+        console.log('✅ Menús obtenidos exitosamente:', menuData.length);
         
       } catch (error) {
         console.error('❌ Error obteniendo menús:', error);
@@ -50,8 +50,8 @@ export const useMenus = () => {
           try {
             setIsLoading(true);
             setError(null);
-            const menusResponse = await aleseCorpApi.getMenus(permissions);
-            setMenus(menusResponse);
+            const menuData = await aleseCorpApi.getMenus(permissions);
+            setMenus(menuData);
           } catch (error) {
             console.error('❌ Error refrescando menús:', error);
             setError('Error al refrescar los menús');

@@ -27,17 +27,30 @@ const LoginForm = () => {
     setIsLoading(true);
 
     try {
-      const success = await login(username.trim(), password);
+      await login(username.trim(), password);
       
-      if (success) {
-        toast.success("¡Bienvenido a ALESE CORP!");
-        navigate("/dashboard");
-      } else {
-        toast.error("Credenciales incorrectas o usuario inactivo");
-      }
+      // Si llegamos aquí, el login fue exitoso
+      toast.success("¡Bienvenido a ALESE CORP!");
+      navigate("/dashboard");
+      
     } catch (error) {
       console.error("Login error:", error);
-      toast.error("Error de conexión. Verifica tu conexión a internet.");
+      
+      // Determinar el mensaje de error apropiado
+      let errorMessage = "Error de conexión";
+      if (error instanceof Error) {
+        if (error.message.includes('Credenciales incorrectas')) {
+          errorMessage = "Usuario o contraseña incorrectos";
+        } else if (error.message.includes('usuario inactivo')) {
+          errorMessage = "Usuario inactivo. Contacta al administrador";
+        } else if (error.message.includes('Error de conexión')) {
+          errorMessage = "Error de conexión con el servidor";
+        } else {
+          errorMessage = error.message;
+        }
+      }
+      
+      toast.error(errorMessage);
     } finally {
       setIsLoading(false);
     }
@@ -50,7 +63,7 @@ const LoginForm = () => {
           <CardHeader className="text-center pb-8 pt-8">
             <div className="flex justify-center mb-3">
               <img 
-                src="/alese-logo.png" 
+                src="/assets/img/alese-logo.png" 
                 alt="ALESE CORP Logo" 
                 className="h-24 w-auto"
               />

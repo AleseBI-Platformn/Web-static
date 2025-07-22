@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { aleseCorpApi, User, LoginResponse } from '../services/aleseCorpApi_php_only';
+import { aleseCorpApi, User, LoginResponse } from '../services/aleseCorpApi';
 
 interface AuthContextType {
   user: User | null;
@@ -64,20 +64,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       // Autenticar directamente con MySQL
       const response: LoginResponse = await aleseCorpApi.authenticate(username, password);
       
-      if (!response.success) {
-        throw new Error(response.message || 'Credenciales incorrectas');
-      }
-
       // Guardar datos en estado y localStorage
-      setUser(response.user!);
-      setPermissions(response.permissions!);
+      setUser(response.user);
+      setPermissions(response.permissions);
       
       localStorage.setItem('aleseCorpUser', JSON.stringify(response.user));
       localStorage.setItem('aleseCorpPermissions', JSON.stringify(response.permissions));
-      localStorage.setItem('aleseCorpToken', response.token || '');
+      localStorage.setItem('aleseCorpToken', response.token);
       
-      console.log('✅ Login exitoso para:', response.user!.fullName);
-      console.log('📋 Permisos asignados:', response.permissions!.length);
+      console.log('✅ Login exitoso para:', response.user.fullName);
+      console.log('📋 Permisos asignados:', response.permissions.length);
       
     } catch (error) {
       console.error('❌ Error en login:', error);
