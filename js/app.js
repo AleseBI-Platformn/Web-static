@@ -83,20 +83,26 @@ createApp({
             try {
                 const response = await axios.get('/api/menus');
                 this.menus = response.data;
-                console.log('Menús cargados desde MySQL:', this.menus);
+                console.log('✅ Menús cargados desde MySQL:', this.menus);
+                console.log('📊 Primer menú de ejemplo:', JSON.stringify(this.menus[0], null, 2));
             } catch (error) {
-                console.error('Error loading menus:', error);
+                console.error('❌ Error loading menus:', error);
                 this.error = 'Error cargando los menús. Por favor recargue la página.';
             }
         },
         
         selectMenu(menu) {
+            console.log('🔄 Seleccionando menú:', menu);
+            console.log('📊 Datos del menú:', JSON.stringify(menu, null, 2));
+            
             this.loadingMenu = true;
             this.currentMenu = menu;
             
             // Simulate loading time
             setTimeout(() => {
                 this.loadingMenu = false;
+                console.log('✅ Menú cargado:', this.currentMenu);
+                console.log('🔗 URL del iframe:', this.currentMenu?.vista);
             }, 500);
         }
     }

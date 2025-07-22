@@ -102,12 +102,23 @@
                     <p>Cargando dashboard...</p>
                 </div>
                 <div v-else-if="currentMenu" class="iframe-container">
+                    <!-- Debug info -->
+                    <div style="background: #f0f0f0; padding: 10px; margin-bottom: 10px; font-size: 12px;">
+                        <strong>DEBUG:</strong><br>
+                        Menú: {{ currentMenu.menu }}<br>
+                        URL: {{ currentMenu.vista }}<br>
+                        Ancho: {{ currentMenu.ancho }}<br>
+                        Alto: {{ currentMenu.alto }}
+                    </div>
+                    
                     <iframe 
                         :src="currentMenu.vista" 
-                        :width="currentMenu.ancho" 
-                        :height="currentMenu.alto"
+                        :width="currentMenu.ancho || '100%'" 
+                        :height="currentMenu.alto || '100%'"
                         frameborder="0"
                         allowfullscreen="true"
+                        style="min-height: 600px;"
+                    ></iframe>
                     ></iframe>
                 </div>
                 <div v-else class="welcome-container">
