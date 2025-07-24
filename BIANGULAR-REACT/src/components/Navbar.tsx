@@ -183,11 +183,37 @@ const Navbar: React.FC<NavbarProps> = ({ onMenuClick }) => {
 
   if (isLoading) {
     return (
-      <nav className="bg-white shadow-lg border-b">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between h-16">
-            <div className="flex items-center">
-              <div className="animate-pulse text-blue-600">🔄 Cargando menús...</div>
+      <nav className="bg-white shadow-lg border-b sticky top-0 z-50">
+        <div className="max-w-7xl mx-auto px-2 sm:px-4 lg:px-6 xl:px-8">
+          <div className="flex justify-between items-center h-16">
+            {/* Logo and Brand */}
+            <div className="flex items-center flex-shrink-0">
+              <div className="flex items-center">
+                <img 
+                  src="/assets/img/alese-logo.png" 
+                  alt="ALESE CORP" 
+                  className="h-8 w-auto sm:h-10"
+                />
+                <div className="ml-2 sm:ml-3">
+                  <h1 className="text-lg sm:text-xl font-bold text-gray-800">Analytics</h1>
+                  <p className="text-xs text-gray-500 hidden sm:block">Portal Empresarial</p>
+                </div>
+              </div>
+            </div>
+            
+            {/* Loading skeleton para menús */}
+            <div className="hidden md:flex items-center flex-1 justify-center mx-4">
+              <div className="flex items-center space-x-2">
+                {[1,2,3,4,5].map(i => (
+                  <div key={i} className="h-8 w-20 bg-gray-200 rounded animate-pulse"></div>
+                ))}
+              </div>
+            </div>
+            
+            {/* User Menu Placeholder */}
+            <div className="flex items-center space-x-2 flex-shrink-0">
+              <div className="h-8 w-16 bg-gray-200 rounded animate-pulse"></div>
+              <div className="md:hidden h-8 w-8 bg-gray-200 rounded animate-pulse"></div>
             </div>
           </div>
         </div>

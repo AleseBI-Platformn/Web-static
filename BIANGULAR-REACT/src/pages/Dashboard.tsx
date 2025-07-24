@@ -2,11 +2,78 @@ import React, { useState } from 'react';
 import { useAuth } from '../contexts/AuthContext_new';
 import Navbar from '../components/Navbar';
 import { MenuItem } from '../services/aleseCorpApi_php_only';
-import { BarChart3, Users, DollarSign, TrendingUp, ArrowLeft, ExternalLink } from 'lucide-react';
+import { BarChart3, Users, DollarSign, TrendingUp, ArrowLeft, RefreshCw } from 'lucide-react';
+
+// Estilos CSS para animaciones futuristas
+const animationStyles = `
+  @keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+  
+  @keyframes fadeInUp {
+    from { 
+      opacity: 0; 
+      transform: translateY(30px); 
+    }
+    to { 
+      opacity: 1; 
+      transform: translateY(0); 
+    }
+  }
+  
+  @keyframes slideInRight {
+    from { 
+      opacity: 0; 
+      transform: translateX(-30px); 
+    }
+    to { 
+      opacity: 1; 
+      transform: translateX(0); 
+    }
+  }
+  
+  @keyframes slideInLeft {
+    from { 
+      opacity: 0; 
+      transform: translateX(30px); 
+    }
+    to { 
+      opacity: 1; 
+      transform: translateX(0); 
+    }
+  }
+  
+  .animate-fadeIn {
+    animation: fadeIn 0.6s ease-out;
+  }
+  
+  .animate-fadeInUp {
+    animation: fadeInUp 0.8s ease-out;
+  }
+  
+  .animate-slideInRight {
+    animation: slideInRight 0.7s ease-out;
+  }
+  
+  .animate-slideInLeft {
+    animation: slideInLeft 0.7s ease-out;
+  }
+`;
+
+// Insertar estilos en el documento
+if (typeof document !== 'undefined' && !document.querySelector('#dashboard-animations')) {
+  const styleSheet = document.createElement('style');
+  styleSheet.id = 'dashboard-animations';
+  styleSheet.type = 'text/css';
+  styleSheet.innerHTML = animationStyles;
+  document.head.appendChild(styleSheet);
+}
 
 const Dashboard: React.FC = () => {
   const { user } = useAuth();
   const [currentView, setCurrentView] = useState<MenuItem | null>(null);
+  const [isRefreshing, setIsRefreshing] = useState(false);
 
   const handleMenuClick = (menu: MenuItem) => {
     console.log('Menu clicked:', menu);
@@ -23,71 +90,86 @@ const Dashboard: React.FC = () => {
     setCurrentView(null);
   };
 
+  const handleRefreshData = () => {
+    setIsRefreshing(true);
+    // Simular actualización de datos
+    setTimeout(() => {
+      setIsRefreshing(false);
+      // Recargar el iframe
+      const iframe = document.querySelector('iframe');
+      if (iframe) {
+        iframe.src = iframe.src;
+      }
+    }, 1500);
+  };
+
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 flex flex-col">
       <Navbar onMenuClick={handleMenuClick} />
       
-      <main className="max-w-7xl mx-auto">
+      <main className="flex-1 overflow-hidden">
         {currentView ? (
-          // Vista de iframe para reportes
-          <div className="bg-white shadow-lg">
-            {/* Header del reporte */}
-            <div className="bg-white border-b border-gray-200 px-4 py-3 sm:px-6">
+          // Vista de iframe para reportes - CON ANIMACIONES Y DISEÑO FUTURISTA
+          <div className="bg-gradient-to-br from-gray-50 to-white min-h-screen animate-fadeIn">
+            {/* Header del reporte - DISEÑO FUTURISTA */}
+            <div className="bg-white/80 backdrop-blur-lg border-b border-gray-200/50 px-4 py-4 sm:px-6 shadow-sm">
               <div className="flex items-center justify-between">
-                <div className="flex items-center space-x-3">
+                <div className="flex items-center space-x-4">
                   <button
                     onClick={handleBackToDashboard}
-                    className="inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                    className="group inline-flex items-center px-4 py-2.5 bg-gradient-to-r from-gray-100 to-gray-200 hover:from-gray-200 hover:to-gray-300 border border-gray-300/50 shadow-sm text-sm font-medium rounded-xl text-gray-700 transition-all duration-300 hover:shadow-md hover:-translate-y-0.5 active:scale-95"
                   >
-                    <ArrowLeft className="h-4 w-4 mr-2" />
+                    <ArrowLeft className="h-4 w-4 mr-2 group-hover:-translate-x-1 transition-transform duration-300" />
                     Volver al Dashboard
                   </button>
-                  <div>
-                    <h1 className="text-lg font-medium text-gray-900">{currentView.menu}</h1>
-                    <p className="text-sm text-gray-500">ID: {currentView.idmenu}</p>
+                  <div className="animate-slideInRight">
+                    <h1 className="text-xl font-bold bg-gradient-to-r from-gray-800 to-gray-600 bg-clip-text text-transparent">
+                      {currentView.menu}
+                    </h1>
+                    <p className="text-sm text-gray-500 font-medium">ID: {currentView.idmenu}</p>
                   </div>
                 </div>
-                <div className="flex items-center space-x-2">
-                  <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                    En línea
-                  </span>
-                  {currentView.vista && (
-                    <a
-                      href={currentView.vista}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50"
-                    >
-                      <ExternalLink className="h-4 w-4 mr-2" />
-                      Abrir en nueva ventana
-                    </a>
-                  )}
+                <div className="flex items-center space-x-3 animate-slideInLeft">
+                  <div className="flex items-center space-x-2">
+                    <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
+                    <span className="inline-flex items-center px-3 py-1.5 rounded-full text-xs font-semibold bg-gradient-to-r from-green-100 to-emerald-100 text-green-800 border border-green-200">
+                      En línea
+                    </span>
+                  </div>
+                  <button
+                    onClick={handleRefreshData}
+                    disabled={isRefreshing}
+                    className="group inline-flex items-center px-4 py-2.5 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 disabled:from-gray-400 disabled:to-gray-500 shadow-lg text-sm font-medium rounded-xl text-white transition-all duration-300 hover:shadow-xl hover:-translate-y-0.5 active:scale-95 disabled:cursor-not-allowed"
+                  >
+                    <RefreshCw className={`h-4 w-4 mr-2 transition-transform duration-300 ${isRefreshing ? 'animate-spin' : 'group-hover:rotate-180'}`} />
+                    {isRefreshing ? 'Actualizando...' : 'Actualizar datos'}
+                  </button>
                 </div>
               </div>
             </div>
 
-            {/* Iframe del reporte */}
-            <div className="relative">
+            {/* Iframe del reporte - AJUSTADO PARA PANTALLA COMPLETA */}
+            <div className="relative animate-fadeInUp" style={{ height: 'calc(100vh - 160px)' }}>
               {currentView.vista ? (
                 <iframe
                   src={currentView.vista}
                   title={currentView.menu}
-                  className="w-full border-0"
+                  className="w-full h-full border-0 rounded-lg shadow-2xl"
                   style={{ 
-                    height: currentView.alto ? `${currentView.alto}px` : '800px',
-                    minHeight: '600px'
+                    height: '100%',
+                    background: 'linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%)'
                   }}
                   frameBorder="0"
                   allowFullScreen
                 />
               ) : (
-                <div className="flex items-center justify-center h-96 bg-gray-50">
-                  <div className="text-center">
-                    <BarChart3 className="mx-auto h-12 w-12 text-gray-400" />
-                    <h3 className="mt-2 text-sm font-medium text-gray-900">
+                <div className="flex items-center justify-center h-full bg-gradient-to-br from-gray-50 to-gray-100 rounded-lg">
+                  <div className="text-center animate-bounce">
+                    <BarChart3 className="mx-auto h-16 w-16 text-gray-400 mb-4" />
+                    <h3 className="text-xl font-semibold text-gray-900 mb-2">
                       Vista no disponible
                     </h3>
-                    <p className="mt-1 text-sm text-gray-500">
+                    <p className="text-gray-500">
                       Este menú no tiene una vista configurada.
                     </p>
                   </div>
@@ -97,7 +179,7 @@ const Dashboard: React.FC = () => {
           </div>
         ) : (
           // Dashboard principal
-          <>
+          <div className="max-w-7xl mx-auto h-full overflow-y-auto">
             {/* Welcome Header */}
             <div className="px-4 py-6 sm:px-6 lg:px-8">
               <div className="bg-white overflow-hidden shadow rounded-lg">
@@ -230,7 +312,7 @@ const Dashboard: React.FC = () => {
                 </div>
               </div>
             </div>
-          </>
+          </div>
         )}
       </main>
     </div>
