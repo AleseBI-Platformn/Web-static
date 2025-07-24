@@ -8,6 +8,7 @@ export const useMenus = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const lastPermissionsRef = useRef<string>('');
+  const cacheRef = useRef<Map<string, MenuItem[]>>(new Map());
 
   useEffect(() => {
     // Si no está autenticado o no hay permisos, limpiar menús
@@ -16,10 +17,18 @@ export const useMenus = () => {
       return;
     }
 
-    // Evitar llamadas duplicadas comparando los permisos
+    // Evitar llamadas duplicadas y usar cache
     const currentPermissions = JSON.stringify(permissions.sort());
     if (lastPermissionsRef.current === currentPermissions) {
       return; // Ya se cargaron los menús para estos permisos
+    }
+
+    // Verificar cache primero
+    const cachedMenus = cacheRef.current.get(currentPermissions);
+    if (cachedMenus) {
+      setMenus(cachedMenus);
+      lastPermissionsRef.current = currentPermissions;
+      return;
     }
 
     const fetchMenus = async () => {
@@ -27,20 +36,14 @@ export const useMenus = () => {
         setIsLoading(true);
         setError(null);
         
-        // Solo log si está habilitado
-        if (import.meta.env.VITE_APP_API_LOGS === 'true') {
-          console.log('📋 Cargando menús para permisos:', permissions);
-        }
-        
-        // Obtener menús directamente desde base de datos
+        // Obtener menús directamente desde base de datos (sin logs para mayor velocidad)
         const menuData = await aleseCorpApi.getMenus(permissions);
+        
+        // Guardar en cache
+        cacheRef.current.set(currentPermissions, menuData);
         
         setMenus(menuData);
         lastPermissionsRef.current = currentPermissions;
-        
-        if (import.meta.env.VITE_APP_API_LOGS === 'true') {
-          console.log('✅ Menús cargados:', menuData.length);
-        }
         
       } catch (error) {
         console.error('❌ Error obteniendo menús:', error);
@@ -60,12 +63,19 @@ export const useMenus = () => {
     error,
     refetch: () => {
       if (isAuthenticated && permissions.length > 0) {
+        const currentPermissions = JSON.stringify(permissions.sort());
+        // Limpiar cache para forzar recarga
+        cacheRef.current.delete(currentPermissions);
+        
         // Re-ejecutar la carga de menús
         const fetchMenus = async () => {
           try {
             setIsLoading(true);
             setError(null);
             const menuData = await aleseCorpApi.getMenus(permissions);
+            
+            // Actualizar cache
+            cacheRef.current.set(currentPermissions, menuData);
             setMenus(menuData);
           } catch (error) {
             console.error('❌ Error refrescando menús:', error);

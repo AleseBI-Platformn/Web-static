@@ -201,19 +201,14 @@ const Navbar: React.FC<NavbarProps> = ({ onMenuClick }) => {
               </div>
             </div>
             
-            {/* Loading skeleton para menús */}
+            {/* Carga rápida - sin skeleton */}
             <div className="hidden md:flex items-center flex-1 justify-center mx-4">
-              <div className="flex items-center space-x-2">
-                {[1,2,3,4,5].map(i => (
-                  <div key={i} className="h-8 w-20 bg-gray-200 rounded animate-pulse"></div>
-                ))}
-              </div>
+              <div className="text-sm text-gray-400">...</div>
             </div>
             
-            {/* User Menu Placeholder */}
+            {/* User Menu básico */}
             <div className="flex items-center space-x-2 flex-shrink-0">
-              <div className="h-8 w-16 bg-gray-200 rounded animate-pulse"></div>
-              <div className="md:hidden h-8 w-8 bg-gray-200 rounded animate-pulse"></div>
+              <div className="w-8 h-8 bg-gray-100 rounded-full animate-pulse"></div>
             </div>
           </div>
         </div>
