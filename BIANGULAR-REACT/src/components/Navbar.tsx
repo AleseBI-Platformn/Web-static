@@ -84,6 +84,9 @@ const Navbar: React.FC<NavbarProps> = ({ onMenuClick }) => {
   const [userDropdownOpen, setUserDropdownOpen] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
+  // Variable para manejar el estado mobile de forma más directa
+  const [mobileOpenMenu, setMobileOpenMenu] = useState<number | null>(null);
+
   // Close menus when clicking outside or resizing
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -98,6 +101,7 @@ const Navbar: React.FC<NavbarProps> = ({ onMenuClick }) => {
       // Close mobile menu on larger screens (md and up = 768px)
       if (window.innerWidth >= 768) {
         setMobileMenuOpen(false);
+        setMobileOpenMenu(null);
       }
       // Close all dropdowns when resizing
       setOpenDropdowns(new Set());
@@ -132,6 +136,7 @@ const Navbar: React.FC<NavbarProps> = ({ onMenuClick }) => {
     
     // Cerrar menú móvil si está abierto
     setMobileMenuOpen(false);
+    setMobileOpenMenu(null);
     
     // Solo llamar onMenuClick para navegación interna - NO abrir ventanas
     if (onMenuClick) {
@@ -355,7 +360,7 @@ const Navbar: React.FC<NavbarProps> = ({ onMenuClick }) => {
             ) : (
               menus.map((menu) => {
                 const hasChildren = menu.children && menu.children.length > 0;
-                const isOpen = openDropdowns.has(menu.idmenu);
+                const isOpen = mobileOpenMenu === menu.idmenu;
 
                 return (
                   <div key={menu.idmenu}>
@@ -364,15 +369,16 @@ const Navbar: React.FC<NavbarProps> = ({ onMenuClick }) => {
                         if (!hasChildren) {
                           // Si NO tiene hijos, navegar directamente
                           setMobileMenuOpen(false);
+                          setMobileOpenMenu(null);
                           if (onMenuClick) onMenuClick(menu);
                         } else {
-                          // Si YA está abierto, cerrarlo
+                          // Para menús con hijos, usar toggle simple
                           if (isOpen) {
-                            setOpenDropdowns(new Set());
-                          } 
-                          // Si está cerrado, abrirlo
-                          else {
-                            setOpenDropdowns(new Set([menu.idmenu]));
+                            // Si está abierto, cerrarlo
+                            setMobileOpenMenu(null);
+                          } else {
+                            // Si está cerrado, abrirlo
+                            setMobileOpenMenu(menu.idmenu);
                           }
                         }
                       }}
@@ -396,9 +402,9 @@ const Navbar: React.FC<NavbarProps> = ({ onMenuClick }) => {
                           <button
                             key={child.idmenu}
                             onClick={() => {
-                              // SIEMPRE cerrar el menú móvil y navegar
+                              // Cerrar el menú móvil, limpiar estado y navegar
                               setMobileMenuOpen(false);
-                              setOpenDropdowns(new Set());
+                              setMobileOpenMenu(null);
                               if (onMenuClick) onMenuClick(child);
                             }}
                             className="w-full flex items-center space-x-2 px-3 py-2 text-sm text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded-md transition-colors duration-200"
