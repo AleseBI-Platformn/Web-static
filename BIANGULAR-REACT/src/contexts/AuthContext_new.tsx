@@ -53,7 +53,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, []);
 
   /**
-   * Login directo con MySQL - Optimizado
+   * Login directo - Optimizado
    */
   const login = async (username: string, password: string): Promise<void> => {
     try {
@@ -64,7 +64,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         console.log('🔐 Iniciando login para:', username);
       }
 
-      // Autenticar directamente con MySQL
+      // Autenticar directamente
       const response: LoginResponse = await aleseCorpApi.authenticate(username, password);
       
       // Guardar datos en estado y localStorage

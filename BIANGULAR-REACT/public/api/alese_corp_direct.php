@@ -1,7 +1,7 @@
 <?php
 /**
  * API Directa para ALESE CORP
- * Conexión directa con MySQL sin fallbacks
+ * Conexión directa sin fallbacks
  * Autor: Sistema BI ALESE CORP
  * Fecha: Julio 2025
  */
@@ -22,7 +22,7 @@ error_reporting(E_ALL);
 ini_set('display_errors', 1);
 
 /**
- * Clase para manejo de conexión directa a MySQL
+ * Clase para manejo de conexión directa a base de datos
  */
 class AleseCorpDatabase {
     private $connection;
@@ -38,9 +38,9 @@ class AleseCorpDatabase {
                 PDO::MYSQL_ATTR_INIT_COMMAND => "SET NAMES utf8mb4"
             ]);
             
-            error_log("✅ Conexión exitosa a MySQL ALESE CORP");
+            error_log("✅ Conexión exitosa a base de datos ALESE CORP");
         } catch (PDOException $e) {
-            error_log("❌ Error conectando a MySQL: " . $e->getMessage());
+            error_log("❌ Error conectando a base de datos: " . $e->getMessage());
             throw new Exception("Error de conexión a la base de datos: " . $e->getMessage());
         }
     }

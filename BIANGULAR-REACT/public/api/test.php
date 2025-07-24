@@ -1,7 +1,7 @@
 <?php
 /**
  * API Test para ALESE CORP - Bluehost Compatible
- * Prueba de conexión con MySQL
+ * Prueba de conexión con base de datos
  */
 
 header('Content-Type: application/json; charset=utf-8');
@@ -25,7 +25,7 @@ $DB_CONFIG = [
 ];
 
 try {
-    // Conectar a MySQL
+    // Conectar a base de datos
     $dsn = "mysql:host={$DB_CONFIG['host']};port={$DB_CONFIG['port']};dbname={$DB_CONFIG['database']};charset=utf8mb4";
     $pdo = new PDO($dsn, $DB_CONFIG['user'], $DB_CONFIG['password'], [
         PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
@@ -39,7 +39,7 @@ try {
     
     echo json_encode([
         'success' => true,
-        'message' => 'Conexión exitosa a MySQL ALESE CORP',
+        'message' => 'Conexión exitosa a base de datos ALESE CORP',
         'database' => $DB_CONFIG['database'],
         'host' => $DB_CONFIG['host'],
         'timestamp' => $result['timestamp'],

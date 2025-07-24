@@ -1,7 +1,7 @@
 <?php
 /**
  * API Menús para ALESE CORP - Bluehost Compatible
- * Conexión directa con MySQL
+ * Conexión directa con base de datos
  */
 
 header('Content-Type: application/json; charset=utf-8');
@@ -48,7 +48,7 @@ try {
         exit;
     }
     
-    // Conectar a MySQL
+    // Conectar a base de datos
     $dsn = "mysql:host={$DB_CONFIG['host']};port={$DB_CONFIG['port']};dbname={$DB_CONFIG['database']};charset=utf8mb4";
     $pdo = new PDO($dsn, $DB_CONFIG['user'], $DB_CONFIG['password'], [
         PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,

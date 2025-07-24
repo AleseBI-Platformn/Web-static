@@ -172,7 +172,7 @@ import { aleseCorpApi } from '../services/aleseCorpApi_php_only';
 
 ### Error: Base de datos
 ```bash
-# 1. Verificar XAMPP/MySQL corriendo
+# 1. Verificar XAMPP/Base de datos corriendo
 # 2. Importar esquema de BD
 # 3. Verificar usuarios de prueba
 ```

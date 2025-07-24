@@ -120,10 +120,6 @@ const Dashboard: React.FC = () => {
                       <p className="text-xs text-gray-400 mt-1">
                         Perfil: {user?.UsuPerfil}
                       </p>
-                      <div className="mt-2 flex items-center text-xs text-green-600">
-                        <div className="w-2 h-2 bg-green-500 rounded-full mr-2"></div>
-                        Conectado a la base de datos real: xqkefqsh_alesecorp_ventas
-                      </div>
                     </div>
                   </div>
                 </div>
@@ -229,9 +225,6 @@ const Dashboard: React.FC = () => {
                     </h3>
                     <p className="mt-1 text-sm text-gray-500">
                       Utiliza el menú de navegación para acceder a los diferentes módulos del sistema.
-                    </p>
-                    <p className="mt-2 text-xs text-gray-400">
-                      Conectado a la base de datos real: xqkefqsh_alesecorp_ventas
                     </p>
                   </div>
                 </div>

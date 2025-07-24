@@ -19,9 +19,9 @@ export const useMenus = () => {
         setIsLoading(true);
         setError(null);
         
-        console.log('📋 Obteniendo menús desde MySQL para permisos:', permissions);
+        console.log('📋 Obteniendo menús desde base de datos para permisos:', permissions);
         
-        // Obtener menús directamente desde MySQL
+        // Obtener menús directamente desde base de datos
         const menusResponse = await aleseCorpApi.getMenus(permissions);
         
         setMenus(menusResponse);
