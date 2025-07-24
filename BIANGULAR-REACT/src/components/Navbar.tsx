@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import { useAuth } from '../contexts/AuthContext';
-import { useMenus } from '../hooks/useMenus';
+import { useAuth } from '../contexts/AuthContext_new';
+import { useMenus } from '../hooks/useMenus_new';
 import { MenuItem } from '../services/aleseCorpApi_php_only';
 import { 
   ChevronDown, 
@@ -27,8 +27,16 @@ const getMenuIcon = (iconName: string | null) => {
   
   const iconMap: { [key: string]: React.ReactNode } = {
     'home': <Home className="w-4 h-4" />,
+    'eye': <Settings className="w-4 h-4" />, // GERENCIA
+    'direction': <TrendingUp className="w-4 h-4" />, // VENTAS
+    'world': <BarChart3 className="w-4 h-4" />, // DIGITAL
+    'shopping-cart': <ShoppingCart className="w-4 h-4" />, // RETOMAS
+    'folder': <Building className="w-4 h-4" />, // ADMINISTRACION
+    'truck': <Package className="w-4 h-4" />, // POSTVENTA
+    'ti-headphone-al': <Users className="w-4 h-4" />, // CALLCENTER
+    'settings': <Settings className="w-4 h-4" />, // F&I
+    'notepad': <FileText className="w-4 h-4" />, // KPI
     'users': <Users className="w-4 h-4" />,
-    'settings': <Settings className="w-4 h-4" />,
     'file': <FileText className="w-4 h-4" />,
     'database': <Database className="w-4 h-4" />,
     'dollar': <DollarSign className="w-4 h-4" />,
@@ -36,7 +44,6 @@ const getMenuIcon = (iconName: string | null) => {
     'chart': <BarChart3 className="w-4 h-4" />,
     'trending': <TrendingUp className="w-4 h-4" />,
     'building': <Building className="w-4 h-4" />,
-    'shopping-cart': <ShoppingCart className="w-4 h-4" />,
     'chart-bar': <BarChart3 className="w-4 h-4" />,
   };
   
@@ -64,11 +71,12 @@ const Navbar: React.FC<NavbarProps> = ({ onMenuClick }) => {
   };
 
   const handleMenuClick = (menu: MenuItem) => {
-    if (menu.url && menu.url !== '#') {
-      // Abrir en nueva ventana si tiene URL
-      window.open(menu.url, '_blank');
+    console.log('Menu clicked:', menu);
+    
+    // Solo llamar onMenuClick para navegación interna - NO abrir ventanas
+    if (onMenuClick) {
+      onMenuClick(menu);
     }
-    onMenuClick?.(menu);
   };
 
   const handleLogout = () => {

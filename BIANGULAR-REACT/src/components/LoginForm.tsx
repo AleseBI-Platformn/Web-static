@@ -6,7 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Eye, EyeOff, User, Lock, Building } from "lucide-react";
 import { toast } from "sonner";
-import { useAuth } from "@/contexts/AuthContext";
+import { useAuth } from "@/contexts/AuthContext_new";
 
 const LoginForm = () => {
   const [username, setUsername] = useState("");
@@ -161,6 +161,9 @@ const LoginForm = () => {
               </p>
               <p className="text-xs text-gray-500">
                 Todos los derechos reservados
+              </p>
+              <p className="text-xs text-gray-500">
+                Desarrollado por <a href="http://www.linkedin.com/in/yea-software-124247376" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">YEA Software</a>
               </p>
             </div>
           </CardContent>

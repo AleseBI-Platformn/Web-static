@@ -2,6 +2,7 @@
 /**
  * Login DIRECTO a BD PRODUCCIÓN - ALESE CORP
  * Base de datos: 50.31.188.163 -> xqkefqsh_alesecorp_ventas
+ * USA PERFIL_MENUS (NO permisos individuales) - Sistema correcto
  */
 
 require_once 'config_dual.php';
@@ -123,19 +124,20 @@ try {
         sendResponse(false, 'Contraseña incorrecta', null, 401);
     }
     
-    // OBTENER PERMISOS - tabla exacta de la BD
+    // OBTENER PERMISOS desde perfil_menus (NO permisos individuales)
     $stmt = $pdo->prepare("
         SELECT DISTINCT idmenu
-        FROM ___________________________permisos
-        WHERE UsuCod = ?
+        FROM perfil_menus
+        WHERE idperfil = ?
         ORDER BY idmenu ASC
     ");
     
-    $stmt->execute([$username]);
+    $stmt->execute([$user['idperfil']]);
     $permissions = $stmt->fetchAll(PDO::FETCH_COLUMN);
     
-    debugLog("PERMISOS OBTENIDOS", [
+    debugLog("PERMISOS OBTENIDOS desde perfil_menus", [
         'username' => $username,
+        'idperfil' => $user['idperfil'],
         'total_permisos' => count($permissions),
         'permisos' => $permissions
     ]);
@@ -143,7 +145,7 @@ try {
     // TOKEN DE SESIÓN
     $token = base64_encode($username . ':' . time() . ':PROD:' . DB_HOST);
     
-    // RESPUESTA FINAL
+    // RESPUESTA FINAL - incluyendo información del perfil
     $userData = [
         'UsuCod' => $user['UsuCod'],
         'UsuNom' => $user['UsuNom'],
@@ -151,12 +153,15 @@ try {
         'UsuApeMat' => $user['UsuApeMat'],
         'UsuEmail' => $user['UsuEmail'],
         'UsuPerfil' => $user['UsuPerfil'],
+        'idperfil' => $user['idperfil'], // Importante para permisos
         'fullName' => $user['fullName']
     ];
     
     debugLog("LOGIN EXITOSO - BD PRODUCCIÓN", [
         'usuario' => $username,
         'nombre_completo' => $user['fullName'],
+        'perfil' => $user['UsuPerfil'],
+        'idperfil' => $user['idperfil'],
         'total_permisos' => count($permissions),
         'bd_conectada' => DB_HOST . '/' . DB_NAME
     ]);

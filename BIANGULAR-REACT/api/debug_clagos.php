@@ -2,6 +2,7 @@
 /**
  * DEBUG ESPECÍFICO para usuario 'clagos' en BD PRODUCCIÓN
  * 50.31.188.163 -> xqkefqsh_alesecorp_ventas
+ * USA PERFIL_MENUS (NO permisos individuales) - Sistema correcto
  */
 
 require_once 'config_dual.php';
@@ -60,17 +61,24 @@ try {
         echo "<p><strong>UsuEst:</strong> " . htmlspecialchars($user['UsuEst']) . "</p>";
         echo "<p><strong>¿Activo?:</strong> " . ($user['UsuEst'] === '1' ? '✅ SÍ (activo)' : '❌ NO (inactivo - código: ' . $user['UsuEst'] . ')') . "</p>";
         
-        // 4. VERIFICAR PERMISOS
-        echo "<h3>🔐 Permisos del usuario:</h3>";
-        $stmt = $pdo->prepare("SELECT idmenu FROM ___________________________permisos WHERE UsuCod = ? ORDER BY idmenu");
-        $stmt->execute(['clagos']);
-        $permissions = $stmt->fetchAll(PDO::FETCH_COLUMN);
+        // 4. VERIFICAR PERMISOS USANDO perfil_menus (NO individuales)
+        echo "<h3>🔐 Permisos del usuario (via perfil_menus):</h3>";
         
-        echo "<p><strong>Total permisos:</strong> " . count($permissions) . "</p>";
-        if ($permissions) {
-            echo "<p><strong>Permisos:</strong> " . implode(', ', $permissions) . "</p>";
+        if (!empty($user['idperfil'])) {
+            echo "<p><strong>ID Perfil:</strong> " . htmlspecialchars($user['idperfil']) . "</p>";
+            
+            $stmt = $pdo->prepare("SELECT idmenu FROM perfil_menus WHERE idperfil = ? ORDER BY idmenu");
+            $stmt->execute([$user['idperfil']]);
+            $permissions = $stmt->fetchAll(PDO::FETCH_COLUMN);
+            
+            echo "<p><strong>Total permisos:</strong> " . count($permissions) . "</p>";
+            if ($permissions) {
+                echo "<p><strong>Permisos:</strong> " . implode(', ', $permissions) . "</p>";
+            } else {
+                echo "<p>❌ No tiene permisos asignados al perfil</p>";
+            }
         } else {
-            echo "<p>❌ No tiene permisos asignados</p>";
+            echo "<p>❌ Usuario no tiene perfil asignado (idperfil vacío)</p>";
         }
         
     } else {

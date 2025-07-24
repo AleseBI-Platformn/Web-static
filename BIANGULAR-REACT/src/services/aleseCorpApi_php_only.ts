@@ -10,6 +10,7 @@ export interface User {
   UsuApeMat: string;
   UsuEmail: string;
   UsuPerfil: string;
+  idperfil: number; // Agregado para permisos
   fullName: string;
 }
 
@@ -38,6 +39,9 @@ export interface MenuResponse {
   success: boolean;
   menus: MenuItem[];
   total: number;
+  total_with_children?: number;
+  usuario?: string; // Agregado para validación
+  perfil?: number; // Agregado para validación
   message?: string;
 }
 
@@ -46,12 +50,14 @@ class AleseCorpApiService {
   private baseUrl = '/api';
 
   /**
-   * Autenticar usuario usando PHP directo
+   * Autenticar usuario usando PHP directo - Optimizado
    */
   async authenticate(username: string, password: string): Promise<LoginResponse> {
     try {
-      console.log('🔐 Autenticando con PHP:', username);
-      console.log('🌐 Endpoint:', `${this.baseUrl}/login_dual.php`);
+      // Solo logs si está habilitado en desarrollo
+      if (import.meta.env.VITE_APP_API_LOGS === 'true') {
+        console.log('🔐 Autenticando:', username);
+      }
       
       const response = await fetch(`${this.baseUrl}/login_dual.php`, {
         method: 'POST',
@@ -71,15 +77,16 @@ class AleseCorpApiService {
       const result: LoginResponse = await response.json();
       
       if (result.success) {
-        console.log('✅ Autenticación exitosa:', result.user.fullName);
-        console.log('📋 Permisos obtenidos:', result.permissions.length);
+        if (import.meta.env.VITE_APP_API_LOGS === 'true') {
+          console.log('✅ Autenticación exitosa:', result.user.fullName);
+          console.log('📋 Permisos obtenidos:', result.permissions.length);
+        }
         
         // Guardar en localStorage
         localStorage.setItem('aleseCorpUser', JSON.stringify(result.user));
         localStorage.setItem('aleseCorpPermissions', JSON.stringify(result.permissions));
         localStorage.setItem('aleseCorpToken', result.token);
       } else {
-        console.log('❌ Autenticación fallida:', result.message);
         throw new Error(result.message || 'Credenciales incorrectas');
       }
       
@@ -91,12 +98,14 @@ class AleseCorpApiService {
   }
 
   /**
-   * Obtener menús usando PHP directo
+   * Obtener menús usando PHP directo (por permisos) - Optimizado
    */
   async getMenus(permissions: number[]): Promise<MenuItem[]> {
     try {
-      console.log('📋 Obteniendo menús con PHP:', permissions);
-      console.log('🌐 Endpoint:', `${this.baseUrl}/menus_dual.php`);
+      // Solo logs si está habilitado
+      if (import.meta.env.VITE_APP_API_LOGS === 'true') {
+        console.log('📋 Obteniendo menús:', permissions);
+      }
       
       const response = await fetch(`${this.baseUrl}/menus_dual.php`, {
         method: 'POST',
@@ -115,13 +124,131 @@ class AleseCorpApiService {
       const result: MenuResponse = await response.json();
       
       if (result.success) {
-        console.log('✅ Menús obtenidos:', result.total);
+        if (import.meta.env.VITE_APP_API_LOGS === 'true') {
+          console.log('✅ Menús obtenidos:', result.total);
+        }
         return result.menus || [];
       } else {
         throw new Error(result.message || 'Error al obtener menús');
       }
     } catch (error) {
       console.error('❌ Error obteniendo menús:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Obtener TODOS los menús principales con submenús (como BiAleseCorp)
+   * Replicando: Api::menus() de BiAleseCorp con permisos por perfil
+   */
+  async getAllMenusWithSubmenus(usuario?: string): Promise<MenuItem[]> {
+    try {
+      console.log('📋 Obteniendo TODOS los menús con submenús (como BiAleseCorp)');
+      
+      let url = `${this.baseUrl}/all_menus.php`;
+      if (usuario) {
+        url += `?usuario=${encodeURIComponent(usuario)}`;
+        console.log('👤 Usuario:', usuario);
+      }
+      
+      console.log('🌐 Endpoint:', url);
+      
+      const response = await fetch(url, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        }
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP Error: ${response.status} ${response.statusText}`);
+      }
+
+      const result: MenuResponse = await response.json();
+      
+      if (result.success) {
+        console.log('✅ Menús obtenidos con permisos:', result.total);
+        if (result.usuario) {
+          console.log('👤 Usuario validado:', result.usuario, 'Perfil:', result.perfil);
+        }
+        return result.menus || [];
+      } else {
+        throw new Error(result.message || 'Error al obtener todos los menús');
+      }
+    } catch (error) {
+      console.error('❌ Error obteniendo todos los menús:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Obtener menú específico por URL (como BiAleseCorp)
+   * Replicando: Menu::getMenu($url) de BiAleseCorp
+   */
+  async getMenuByUrl(url: string): Promise<MenuItem | null> {
+    try {
+      console.log('📋 Obteniendo menú por URL:', url);
+      console.log('🌐 Endpoint:', `${this.baseUrl}/menu_by_url.php`);
+      
+      const response = await fetch(`${this.baseUrl}/menu_by_url.php?url=${encodeURIComponent(url)}`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        }
+      });
+
+      if (!response.ok) {
+        if (response.status === 404) {
+          return null; // Menú no encontrado
+        }
+        throw new Error(`HTTP Error: ${response.status} ${response.statusText}`);
+      }
+
+      const result = await response.json();
+      
+      if (result.success) {
+        console.log('✅ Menú por URL obtenido:', result.data.menu);
+        return result.data;
+      } else {
+        console.log('❌ Menú no encontrado:', url);
+        return null;
+      }
+    } catch (error) {
+      console.error('❌ Error obteniendo menú por URL:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Obtener submenús de un padre específico (como BiAleseCorp)
+   * Replicando: Menu::getSubMenus($parent) de BiAleseCorp
+   */
+  async getSubMenus(parentId: number): Promise<MenuItem[]> {
+    try {
+      console.log('📋 Obteniendo submenús del padre:', parentId);
+      console.log('🌐 Endpoint:', `${this.baseUrl}/submenus.php`);
+      
+      const response = await fetch(`${this.baseUrl}/submenus.php?parent_id=${parentId}`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        }
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP Error: ${response.status} ${response.statusText}`);
+      }
+
+      const result = await response.json();
+      
+      if (result.success) {
+        console.log('✅ Submenús obtenidos:', result.data.total);
+        return result.data.submenus || [];
+      } else {
+        throw new Error(result.message || 'Error al obtener submenús');
+      }
+    } catch (error) {
+      console.error('❌ Error obteniendo submenús:', error);
       throw error;
     }
   }
@@ -191,6 +318,68 @@ class AleseCorpApiService {
     localStorage.removeItem('aleseCorpPermissions');
     localStorage.removeItem('aleseCorpToken');
     console.log('🔓 Sesión cerrada');
+  }
+
+  /**
+   * Welcome Controller API - Simula el flujo completo de BiAleseCorp
+   * Replicando: Welcome::index() de BiAleseCorp
+   */
+  async getWelcomePage(page: string): Promise<any> {
+    try {
+      if (import.meta.env.VITE_APP_API_LOGS === 'true') {
+        console.log('🏠 Welcome Controller - Cargando página:', page);
+      }
+      
+      const response = await fetch(`${this.baseUrl}/welcome.php?page=${encodeURIComponent(page)}`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        }
+      });
+
+      if (!response.ok) {
+        if (response.status === 404) {
+          return { success: false, message: 'Página no encontrada' };
+        }
+        throw new Error(`HTTP Error: ${response.status} ${response.statusText}`);
+      }
+
+      const result = await response.json();
+      
+      if (import.meta.env.VITE_APP_API_LOGS === 'true') {
+        console.log('✅ Welcome Controller - Página cargada:', result.success);
+      }
+      
+      return result;
+    } catch (error) {
+      console.error('❌ Error en Welcome Controller:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Health Check API
+   */
+  async healthCheck(): Promise<any> {
+    try {
+      const response = await fetch(`${this.baseUrl}/health.php`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        }
+      });
+
+      const result = await response.json();
+      
+      if (import.meta.env.VITE_APP_API_LOGS === 'true') {
+        console.log('🏥 Health Check:', result.success ? 'OK' : 'FAILED');
+      }
+      
+      return result;
+    } catch (error) {
+      console.error('❌ Error en Health Check:', error);
+      throw error;
+    }
   }
 }
 

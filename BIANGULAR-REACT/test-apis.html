@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ALESE CORP - Test de APIs</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .endpoint {
+            background: #f8f9fa;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 5px;
+            border-left: 4px solid #007bff;
+        }
+        .endpoint h3 {
+            margin: 0 0 10px 0;
+            color: #007bff;
+        }
+        .result {
+            background: #e9ecef;
+            padding: 10px;
+            margin-top: 10px;
+            border-radius: 3px;
+            font-family: monospace;
+            font-size: 12px;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px 0;
+        }
+        button:hover {
+            background: #0056b3;
+        }
+        .success {
+            color: #28a745;
+            font-weight: bold;
+        }
+        .error {
+            color: #dc3545;
+            font-weight: bold;
+        }
+        .info {
+            color: #6c757d;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🏢 ALESE CORP - Test de APIs BiAleseCorp Style</h1>
+        <p class="info">Prueba todos los endpoints PHP que replican exactamente el comportamiento de BiAleseCorp</p>
+        
+        <div class="endpoint">
+            <h3>1. Health Check</h3>
+            <p>Verifica que la API esté funcionando y conectada a la base de datos</p>
+            <button onclick="testHealth()">🏥 Test Health</button>
+            <div id="health-result" class="result"></div>
+        </div>
+
+        <div class="endpoint">
+            <h3>2. Login (Autenticación)</h3>
+            <p>Prueba el login con un usuario de la BD</p>
+            <input type="text" id="username" placeholder="Usuario" value="jpoma" style="margin: 5px; padding: 8px;">
+            <input type="password" id="password" placeholder="Contraseña" value="123456" style="margin: 5px; padding: 8px;">
+            <button onclick="testLogin()">🔐 Test Login</button>
+            <div id="login-result" class="result"></div>
+        </div>
+
+        <div class="endpoint">
+            <h3>3. Todos los Menús con Submenús</h3>
+            <p>Obtiene todos los menús principales con sus submenús (como Api::menus())</p>
+            <button onclick="testAllMenus()">📋 Test All Menus</button>
+            <div id="all-menus-result" class="result"></div>
+        </div>
+
+        <div class="endpoint">
+            <h3>4. Menú por URL</h3>
+            <p>Busca un menú específico por su URL (como Menu::getMenu())</p>
+            <input type="text" id="menu-url" placeholder="URL del menú" value="ventas" style="margin: 5px; padding: 8px;">
+            <button onclick="testMenuByUrl()">🔍 Test Menu by URL</button>
+            <div id="menu-url-result" class="result"></div>
+        </div>
+
+        <div class="endpoint">
+            <h3>5. Submenús de un Padre</h3>
+            <p>Obtiene los submenús de un menú padre (como Menu::getSubMenus())</p>
+            <input type="number" id="parent-id" placeholder="ID del padre" value="1" style="margin: 5px; padding: 8px;">
+            <button onclick="testSubMenus()">📂 Test SubMenus</button>
+            <div id="submenus-result" class="result"></div>
+        </div>
+
+        <div class="endpoint">
+            <h3>6. Welcome Controller</h3>
+            <p>Simula el controlador Welcome completo (como Welcome::index())</p>
+            <input type="text" id="welcome-page" placeholder="Página" value="ventas" style="margin: 5px; padding: 8px;">
+            <button onclick="testWelcome()">🏠 Test Welcome</button>
+            <div id="welcome-result" class="result"></div>
+        </div>
+
+        <div class="endpoint">
+            <h3>7. Menús por Permisos</h3>
+            <p>Obtiene menús filtrados por permisos del usuario (requiere login previo)</p>
+            <button onclick="testMenusByPermissions()">🔒 Test Menus by Permissions</button>
+            <div id="permissions-result" class="result"></div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = '/api';
+        let userPermissions = [];
+
+        function showResult(elementId, data, isSuccess = true) {
+            const element = document.getElementById(elementId);
+            const statusClass = isSuccess ? 'success' : 'error';
+            const statusIcon = isSuccess ? '✅' : '❌';
+            
+            element.innerHTML = `
+                <div class="${statusClass}">${statusIcon} ${isSuccess ? 'SUCCESS' : 'ERROR'}</div>
+                <pre>${JSON.stringify(data, null, 2)}</pre>
+            `;
+        }
+
+        async function testHealth() {
+            try {
+                const response = await fetch(`${API_BASE}/health.php`);
+                const data = await response.json();
+                showResult('health-result', data, data.success);
+            } catch (error) {
+                showResult('health-result', { error: error.message }, false);
+            }
+        }
+
+        async function testLogin() {
+            try {
+                const username = document.getElementById('username').value;
+                const password = document.getElementById('password').value;
+                
+                const response = await fetch(`${API_BASE}/login_dual.php`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username, password })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    userPermissions = data.permissions || [];
+                    localStorage.setItem('testUserPermissions', JSON.stringify(userPermissions));
+                }
+                
+                showResult('login-result', data, data.success);
+            } catch (error) {
+                showResult('login-result', { error: error.message }, false);
+            }
+        }
+
+        async function testAllMenus() {
+            try {
+                const response = await fetch(`${API_BASE}/all_menus.php`);
+                const data = await response.json();
+                showResult('all-menus-result', data, data.success);
+            } catch (error) {
+                showResult('all-menus-result', { error: error.message }, false);
+            }
+        }
+
+        async function testMenuByUrl() {
+            try {
+                const url = document.getElementById('menu-url').value;
+                const response = await fetch(`${API_BASE}/menu_by_url.php?url=${encodeURIComponent(url)}`);
+                const data = await response.json();
+                showResult('menu-url-result', data, response.ok);
+            } catch (error) {
+                showResult('menu-url-result', { error: error.message }, false);
+            }
+        }
+
+        async function testSubMenus() {
+            try {
+                const parentId = document.getElementById('parent-id').value;
+                const response = await fetch(`${API_BASE}/submenus.php?parent_id=${parentId}`);
+                const data = await response.json();
+                showResult('submenus-result', data, data.success);
+            } catch (error) {
+                showResult('submenus-result', { error: error.message }, false);
+            }
+        }
+
+        async function testWelcome() {
+            try {
+                const page = document.getElementById('welcome-page').value;
+                const response = await fetch(`${API_BASE}/welcome.php?page=${encodeURIComponent(page)}`);
+                const data = await response.json();
+                showResult('welcome-result', data, response.ok);
+            } catch (error) {
+                showResult('welcome-result', { error: error.message }, false);
+            }
+        }
+
+        async function testMenusByPermissions() {
+            try {
+                // Obtener permisos guardados
+                const savedPermissions = localStorage.getItem('testUserPermissions');
+                const permissions = savedPermissions ? JSON.parse(savedPermissions) : userPermissions;
+                
+                if (permissions.length === 0) {
+                    showResult('permissions-result', { error: 'Debes hacer login primero para obtener permisos' }, false);
+                    return;
+                }
+                
+                const response = await fetch(`${API_BASE}/menus_dual.php`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ permissions })
+                });
+                
+                const data = await response.json();
+                showResult('permissions-result', data, data.success);
+            } catch (error) {
+                showResult('permissions-result', { error: error.message }, false);
+            }
+        }
+
+        // Auto-test de health al cargar la página
+        window.onload = function() {
+            testHealth();
+        };
+    </script>
+</body>
+</html>

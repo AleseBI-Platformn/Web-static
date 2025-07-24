@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { aleseCorpApi, User, LoginResponse } from '../services/aleseCorpApi';
+import { aleseCorpApi, User, LoginResponse } from '../services/aleseCorpApi_php_only';
 
 interface AuthContextType {
   user: User | null;
@@ -37,7 +37,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         if (storedUser && storedPermissions) {
           setUser(JSON.parse(storedUser));
           setPermissions(JSON.parse(storedPermissions));
-          console.log('✅ Usuario cargado desde localStorage');
         }
       } catch (error) {
         console.error('❌ Error cargando datos del usuario:', error);
@@ -54,12 +53,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, []);
 
   /**
-   * Login directo con MySQL - Sin fallbacks
+   * Login directo con MySQL - Optimizado
    */
   const login = async (username: string, password: string): Promise<void> => {
     try {
       setIsLoading(true);
-      console.log('🔐 Iniciando login directo para:', username);
+      
+      // Solo logs si está habilitado
+      if (import.meta.env.VITE_APP_API_LOGS === 'true') {
+        console.log('🔐 Iniciando login para:', username);
+      }
 
       // Autenticar directamente con MySQL
       const response: LoginResponse = await aleseCorpApi.authenticate(username, password);
@@ -72,8 +75,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       localStorage.setItem('aleseCorpPermissions', JSON.stringify(response.permissions));
       localStorage.setItem('aleseCorpToken', response.token);
       
-      console.log('✅ Login exitoso para:', response.user.fullName);
-      console.log('📋 Permisos asignados:', response.permissions.length);
+      if (import.meta.env.VITE_APP_API_LOGS === 'true') {
+        console.log('✅ Login exitoso:', response.user.fullName);
+        console.log('📋 Permisos:', response.permissions.length);
+      }
       
     } catch (error) {
       console.error('❌ Error en login:', error);

@@ -1,6 +1,7 @@
 <?php
 /**
  * Debug para ver usuarios reales en la base de datos
+ * USA PERFIL_MENUS (NO permisos individuales) - Sistema correcto
  */
 
 require_once 'config_dual.php';
@@ -28,11 +29,16 @@ try {
     
     $users = $stmt->fetchAll();
     
-    // Obtener algunos permisos de ejemplo
+    // Obtener resumen de permisos desde perfil_menus (NO individuales)
     $stmt = $pdo->query("
-        SELECT UsuCod, COUNT(*) as total_permisos
-        FROM ___________________________permisos
-        GROUP BY UsuCod
+        SELECT 
+            u.UsuCod, 
+            u.idperfil,
+            COUNT(pm.idmenu) as total_permisos
+        FROM usuarios u
+        LEFT JOIN perfil_menus pm ON u.idperfil = pm.idperfil
+        WHERE u.UsuEst = '1'
+        GROUP BY u.UsuCod, u.idperfil
         ORDER BY total_permisos DESC
         LIMIT 10
     ");
