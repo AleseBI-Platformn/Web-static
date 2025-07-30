@@ -401,16 +401,16 @@ const Navbar: React.FC<NavbarProps> = ({ onMenuClick, onHomeClick, currentView }
               )}
             </div>
 
-            {/* Mobile menu button */}
-            <div className="md:hidden">
+            {/* Mobile menu button - VISIBLE EN TABLETS */}
+            <div className="lg:hidden">
               <button
                 onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
                 className="navbar-button p-2 text-gray-700 hover:text-blue-600 hover:bg-blue-50 rounded-md transition-colors duration-200"
               >
                 {mobileMenuOpen ? (
-                  <X className="w-6 h-6" />
+                  <X className="w-5 h-5 sm:w-6 sm:h-6" />
                 ) : (
-                  <MenuIcon className="w-6 h-6" />
+                  <MenuIcon className="w-5 h-5 sm:w-6 sm:h-6" />
                 )}
               </button>
             </div>
@@ -418,9 +418,9 @@ const Navbar: React.FC<NavbarProps> = ({ onMenuClick, onHomeClick, currentView }
         </div>
       </div>
 
-      {/* Mobile Menu - OPTIMIZADO PARA MENÚS LARGOS */}
+      {/* Mobile Menu - OPTIMIZADO PARA MENÚS LARGOS Y TABLETS */}
       {mobileMenuOpen && (
-        <div className="md:hidden">
+        <div className="lg:hidden">
           <div className="px-2 pt-2 pb-3 space-y-1 bg-white border-t border-gray-200 shadow-lg max-h-[calc(100vh-4rem)] overflow-y-auto">
             {/* Home Button Mobile - Solo visible cuando hay una vista activa */}
             {onHomeClick && currentView && (
