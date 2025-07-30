@@ -132,8 +132,8 @@ const Navbar: React.FC<NavbarProps> = ({ onMenuClick, onHomeClick, currentView }
     };
 
     const handleResize = () => {
-      // Close mobile menu on larger screens (md and up = 768px)
-      if (window.innerWidth >= 768) {
+      // Close mobile menu on larger screens (xl and up = 1280px)
+      if (window.innerWidth >= 1280) {
         setMobileMenuOpen(false);
         setMobileOpenMenu(null);
       }
@@ -286,8 +286,8 @@ const Navbar: React.FC<NavbarProps> = ({ onMenuClick, onHomeClick, currentView }
             </div>
           </div>
 
-          {/* Desktop Menu */}
-          <div className="hidden md:flex items-center flex-1 justify-center mx-4" style={{ overflow: 'visible' }}>
+          {/* Desktop Menu - SOLO EN PANTALLAS GRANDES */}
+          <div className="hidden xl:flex items-center flex-1 justify-center mx-4" style={{ overflow: 'visible' }}>
             <div className="flex items-center space-x-1 xl:space-x-2 overflow-x-auto scrollbar-hide max-w-full" style={{ overflow: 'visible' }}>
               {/* Home Button - Solo visible cuando hay una vista activa */}
               {onHomeClick && currentView && (
@@ -401,8 +401,8 @@ const Navbar: React.FC<NavbarProps> = ({ onMenuClick, onHomeClick, currentView }
               )}
             </div>
 
-            {/* Mobile menu button - VISIBLE EN TABLETS */}
-            <div className="lg:hidden">
+            {/* Mobile menu button - VISIBLE EN TABLETS Y MÓVILES */}
+            <div className="xl:hidden">
               <button
                 onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
                 className="navbar-button p-2 text-gray-700 hover:text-blue-600 hover:bg-blue-50 rounded-md transition-colors duration-200"
@@ -420,7 +420,7 @@ const Navbar: React.FC<NavbarProps> = ({ onMenuClick, onHomeClick, currentView }
 
       {/* Mobile Menu - OPTIMIZADO PARA MENÚS LARGOS Y TABLETS */}
       {mobileMenuOpen && (
-        <div className="lg:hidden">
+        <div className="xl:hidden">
           <div className="px-2 pt-2 pb-3 space-y-1 bg-white border-t border-gray-200 shadow-lg max-h-[calc(100vh-4rem)] overflow-y-auto">
             {/* Home Button Mobile - Solo visible cuando hay una vista activa */}
             {onHomeClick && currentView && (

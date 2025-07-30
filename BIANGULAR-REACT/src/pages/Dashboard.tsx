@@ -167,7 +167,7 @@ const Dashboard: React.FC = () => {
           <div className="bg-gradient-to-br from-gray-50 to-white min-h-screen animate-fadeIn">
             {/* Header del reporte - CON BREADCRUMB */}
             <div className="bg-white/80 backdrop-blur-lg border-b border-gray-200/50 px-3 py-3 sm:px-4 sm:py-4 md:px-6 shadow-sm">
-              <div className="flex flex-col space-y-3 sm:space-y-2 md:flex-row md:items-center md:justify-between md:space-y-0">
+              <div className="flex flex-col space-y-3 sm:space-y-2 xl:flex-row xl:items-center xl:justify-between xl:space-y-0">
                 <div className="flex items-center space-x-3 sm:space-x-4">
                   {/* Breadcrumb en lugar del botón */}
                   <div className="animate-slideInRight">
@@ -205,7 +205,7 @@ const Dashboard: React.FC = () => {
                 <iframe
                   src={currentView.vista}
                   title={currentView.menu}
-                  className="w-full h-full border-0 rounded-none md:rounded-lg shadow-none md:shadow-2xl"
+                  className="w-full h-full border-0 rounded-none xl:rounded-lg shadow-none xl:shadow-2xl"
                   style={{ 
                     height: '100%',
                     background: 'linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%)'
@@ -261,7 +261,7 @@ const Dashboard: React.FC = () => {
 
             {/* Quick Stats */}
             <div className="px-3 py-4 sm:px-4 sm:py-5 md:px-6 md:py-6 lg:px-8">
-              <div className="grid grid-cols-2 gap-3 sm:gap-4 md:gap-5 lg:grid-cols-4">
+              <div className="grid grid-cols-2 gap-3 sm:gap-4 md:gap-5 xl:grid-cols-4">
                 <div className="bg-white overflow-hidden shadow rounded-lg">
                   <div className="p-3 sm:p-4 md:p-5">
                     <div className="flex items-center">

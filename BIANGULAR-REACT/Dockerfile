@@ -56,6 +56,9 @@ RUN chmod -R 755 ./api/
 # Copiar build del frontend desde stage 1
 COPY --from=frontend-builder /app/dist ./
 
+# Copiar assets de manera explícita
+COPY assets/ ./assets/
+
 # Configuración de Nginx
 COPY nginx.conf /etc/nginx/nginx.conf
 
