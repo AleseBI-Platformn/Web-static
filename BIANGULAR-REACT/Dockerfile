@@ -42,8 +42,8 @@ RUN apk add --no-cache \
     curl \
     && docker-php-ext-install pdo pdo_mysql
 
-# Crear usuario nginx
-RUN adduser -D -s /bin/sh nginx
+# Usuario nginx ya existe en php:8.1-fpm-alpine
+# RUN adduser -D -s /bin/sh nginx (comentado - usuario ya existe)
 
 # Configurar directorios
 WORKDIR /var/www/html
