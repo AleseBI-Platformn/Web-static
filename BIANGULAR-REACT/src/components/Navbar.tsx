@@ -473,12 +473,6 @@ const Navbar: React.FC<NavbarProps> = ({ onMenuClick, onHomeClick, currentView }
                       <div className="flex items-center space-x-2">
                         {getMenuIcon(menu.icono)}
                         <span>{cleanMenuText(menu.menu)}</span>
-                        {/* Indicador de cantidad de submenús */}
-                        {hasChildren && (
-                          <span className="text-xs bg-gray-200 text-gray-600 px-2 py-0.5 rounded-full">
-                            {childrenCount}
-                          </span>
-                        )}
                       </div>
                       {hasChildren && (
                         <ChevronDown 
@@ -504,11 +498,11 @@ const Navbar: React.FC<NavbarProps> = ({ onMenuClick, onHomeClick, currentView }
                         {/* Header para menús largos */}
                         {isLongMenu && (
                           <div className="px-3 py-1 text-xs text-gray-500 font-medium border-b border-gray-200 mb-2 sticky top-0 bg-white z-10">
-                            {cleanMenuText(menu.menu)} ({childrenCount} opciones)
+                            {cleanMenuText(menu.menu)}
                           </div>
                         )}
                         
-                        {menu.children?.map((child, index) => (
+                        {menu.children?.map((child) => (
                           <button
                             key={child.idmenu}
                             onClick={() => {
@@ -521,12 +515,6 @@ const Navbar: React.FC<NavbarProps> = ({ onMenuClick, onHomeClick, currentView }
                           >
                             {getMenuIcon(child.icono)}
                             <span>{cleanMenuText(child.menu)}</span>
-                            {/* Indicador de posición para menús largos */}
-                            {isLongMenu && (
-                              <span className="ml-auto text-xs text-gray-400">
-                                {index + 1}
-                              </span>
-                            )}
                           </button>
                         ))}
                       </div>
