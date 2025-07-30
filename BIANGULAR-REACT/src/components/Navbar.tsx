@@ -22,7 +22,7 @@ import {
   AlertCircle
 } from 'lucide-react';
 
-// Agregar estilos para la animación
+// Agregar estilos para la animación y optimización de scroll
 const dropdownStyles = `
   @keyframes fadeIn {
     from {
@@ -33,6 +33,38 @@ const dropdownStyles = `
       opacity: 1;
       transform: translateY(0);
     }
+  }
+  
+  /* Optimización de scroll para menús largos */
+  .mobile-submenu-scroll {
+    scrollbar-width: thin;
+    scrollbar-color: #d1d5db #f3f4f6;
+  }
+  
+  .mobile-submenu-scroll::-webkit-scrollbar {
+    width: 4px;
+  }
+  
+  .mobile-submenu-scroll::-webkit-scrollbar-track {
+    background: #f3f4f6;
+    border-radius: 2px;
+  }
+  
+  .mobile-submenu-scroll::-webkit-scrollbar-thumb {
+    background: #d1d5db;
+    border-radius: 2px;
+  }
+  
+  .mobile-submenu-scroll::-webkit-scrollbar-thumb:hover {
+    background: #9ca3af;
+  }
+  
+  /* Optimización de performance para items del menú */
+  .menu-item-optimized {
+    will-change: transform;
+    backface-visibility: hidden;
+    -webkit-transform: translateZ(0);
+    transform: translateZ(0);
   }
 `;
 
@@ -386,10 +418,10 @@ const Navbar: React.FC<NavbarProps> = ({ onMenuClick, onHomeClick, currentView }
         </div>
       </div>
 
-      {/* Mobile Menu - CÓDIGO NUEVO COMPLETO */}
+      {/* Mobile Menu - OPTIMIZADO PARA MENÚS LARGOS */}
       {mobileMenuOpen && (
         <div className="md:hidden">
-          <div className="px-2 pt-2 pb-3 space-y-1 bg-white border-t border-gray-200 shadow-lg">
+          <div className="px-2 pt-2 pb-3 space-y-1 bg-white border-t border-gray-200 shadow-lg max-h-[calc(100vh-4rem)] overflow-y-auto">
             {/* Home Button Mobile - Solo visible cuando hay una vista activa */}
             {onHomeClick && currentView && (
               <button
@@ -407,6 +439,8 @@ const Navbar: React.FC<NavbarProps> = ({ onMenuClick, onHomeClick, currentView }
               menus.map((menu) => {
                 const hasChildren = menu.children && menu.children.length > 0;
                 const isOpen = mobileOpenMenu === menu.idmenu;
+                const childrenCount = menu.children?.length || 0;
+                const isLongMenu = childrenCount > 8; // Detectar menús largos
 
                 return (
                   <div key={menu.idmenu}>
@@ -433,6 +467,12 @@ const Navbar: React.FC<NavbarProps> = ({ onMenuClick, onHomeClick, currentView }
                       <div className="flex items-center space-x-2">
                         {getMenuIcon(menu.icono)}
                         <span>{menu.menu}</span>
+                        {/* Indicador de cantidad de submenús */}
+                        {hasChildren && (
+                          <span className="text-xs bg-gray-200 text-gray-600 px-2 py-0.5 rounded-full">
+                            {childrenCount}
+                          </span>
+                        )}
                       </div>
                       {hasChildren && (
                         <ChevronDown 
@@ -441,10 +481,28 @@ const Navbar: React.FC<NavbarProps> = ({ onMenuClick, onHomeClick, currentView }
                       )}
                     </button>
 
-                    {/* Mobile Submenu */}
+                    {/* Mobile Submenu - CON ALTURA LIMITADA PARA MENÚS LARGOS */}
                     {hasChildren && isOpen && (
-                      <div className="pl-6 mt-1 space-y-1">
-                        {menu.children?.map(child => (
+                      <div 
+                        className={`pl-6 mt-1 space-y-1 mobile-submenu-scroll ${
+                          isLongMenu 
+                            ? 'max-h-64 overflow-y-auto' 
+                            : ''
+                        }`}
+                        style={{
+                          // Smooth scrolling para mejor UX
+                          scrollBehavior: 'smooth',
+                          WebkitOverflowScrolling: 'touch'
+                        }}
+                      >
+                        {/* Header para menús largos */}
+                        {isLongMenu && (
+                          <div className="px-3 py-1 text-xs text-gray-500 font-medium border-b border-gray-200 mb-2 sticky top-0 bg-white z-10">
+                            {menu.menu} ({childrenCount} opciones)
+                          </div>
+                        )}
+                        
+                        {menu.children?.map((child, index) => (
                           <button
                             key={child.idmenu}
                             onClick={() => {
@@ -453,10 +511,16 @@ const Navbar: React.FC<NavbarProps> = ({ onMenuClick, onHomeClick, currentView }
                               setMobileOpenMenu(null);
                               if (onMenuClick) onMenuClick(child);
                             }}
-                            className="w-full flex items-center space-x-2 px-3 py-2 text-sm text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded-md transition-colors duration-200"
+                            className="w-full flex items-center space-x-2 px-3 py-2 text-sm text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded-md transition-colors duration-200 menu-item-optimized"
                           >
                             {getMenuIcon(child.icono)}
                             <span>{child.menu}</span>
+                            {/* Indicador de posición para menús largos */}
+                            {isLongMenu && (
+                              <span className="ml-auto text-xs text-gray-400">
+                                {index + 1}
+                              </span>
+                            )}
                           </button>
                         ))}
                       </div>
