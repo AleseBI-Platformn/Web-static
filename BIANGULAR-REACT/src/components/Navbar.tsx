@@ -68,6 +68,12 @@ const dropdownStyles = `
   }
 `;
 
+// Función para limpiar números del texto de los menús
+const cleanMenuText = (text: string): string => {
+  // Remover números al inicio del texto (ej: "1. Dashboard" -> "Dashboard")
+  return text.replace(/^\d+\.\s*/, '').trim();
+};
+
 // Insertar estilos en el documento
 if (typeof document !== 'undefined') {
   const styleSheet = document.createElement('style');
@@ -197,7 +203,7 @@ const Navbar: React.FC<NavbarProps> = ({ onMenuClick, onHomeClick, currentView }
         >
           <div className="flex items-center space-x-2">
             {getMenuIcon(menu.icono)}
-            <span>{menu.menu}</span>
+            <span>{cleanMenuText(menu.menu)}</span>
           </div>
           {hasChildren && (
             <ChevronDown 
@@ -319,15 +325,15 @@ const Navbar: React.FC<NavbarProps> = ({ onMenuClick, onHomeClick, currentView }
                           }
                         }}
                         className="navbar-button flex items-center space-x-1 px-2 xl:px-3 py-2 text-xs xl:text-sm font-medium text-gray-700 hover:text-blue-600 hover:bg-blue-50 rounded-md transition-colors duration-200 whitespace-nowrap"
-                        title={menu.menu}
+                        title={cleanMenuText(menu.menu)}
                       >
                         <div className="flex-shrink-0">
                           {getMenuIcon(menu.icono)}
                         </div>
-                        <span className="hidden xl:inline truncate max-w-24">{menu.menu}</span>
-                        <span className="hidden lg:inline xl:hidden truncate max-w-16 text-xs">{menu.menu}</span>
+                        <span className="hidden xl:inline truncate max-w-24">{cleanMenuText(menu.menu)}</span>
+                        <span className="hidden lg:inline xl:hidden truncate max-w-16 text-xs">{cleanMenuText(menu.menu)}</span>
                         <span className="hidden md:inline lg:hidden text-xs">
-                          {menu.menu.length > 6 ? menu.menu.substring(0, 6) + '...' : menu.menu}
+                          {cleanMenuText(menu.menu).length > 6 ? cleanMenuText(menu.menu).substring(0, 6) + '...' : cleanMenuText(menu.menu)}
                         </span>
                         {hasChildren && (
                           <ChevronDown 
@@ -354,7 +360,7 @@ const Navbar: React.FC<NavbarProps> = ({ onMenuClick, onHomeClick, currentView }
                               className="w-full flex items-center space-x-2 px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition-colors duration-200 text-left"
                             >
                               {getMenuIcon(child.icono)}
-                              <span className="truncate">{child.menu}</span>
+                              <span className="truncate">{cleanMenuText(child.menu)}</span>
                             </button>
                           ))}
                         </div>
@@ -466,7 +472,7 @@ const Navbar: React.FC<NavbarProps> = ({ onMenuClick, onHomeClick, currentView }
                     >
                       <div className="flex items-center space-x-2">
                         {getMenuIcon(menu.icono)}
-                        <span>{menu.menu}</span>
+                        <span>{cleanMenuText(menu.menu)}</span>
                         {/* Indicador de cantidad de submenús */}
                         {hasChildren && (
                           <span className="text-xs bg-gray-200 text-gray-600 px-2 py-0.5 rounded-full">
@@ -498,7 +504,7 @@ const Navbar: React.FC<NavbarProps> = ({ onMenuClick, onHomeClick, currentView }
                         {/* Header para menús largos */}
                         {isLongMenu && (
                           <div className="px-3 py-1 text-xs text-gray-500 font-medium border-b border-gray-200 mb-2 sticky top-0 bg-white z-10">
-                            {menu.menu} ({childrenCount} opciones)
+                            {cleanMenuText(menu.menu)} ({childrenCount} opciones)
                           </div>
                         )}
                         
@@ -514,7 +520,7 @@ const Navbar: React.FC<NavbarProps> = ({ onMenuClick, onHomeClick, currentView }
                             className="w-full flex items-center space-x-2 px-3 py-2 text-sm text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded-md transition-colors duration-200 menu-item-optimized"
                           >
                             {getMenuIcon(child.icono)}
-                            <span>{child.menu}</span>
+                            <span>{cleanMenuText(child.menu)}</span>
                             {/* Indicador de posición para menús largos */}
                             {isLongMenu && (
                               <span className="ml-auto text-xs text-gray-400">
