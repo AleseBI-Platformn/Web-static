@@ -13,20 +13,22 @@ export default defineConfig({
   server: {
     port: 5173,
     host: 'localhost',
-    proxy: {
-      '/api': {
-        target: 'http://localhost:8000',
-        changeOrigin: true,
-        secure: false,
-        rewrite: (path) => path.replace(/^\/api/, '/api'),
-        // Quitar logs de proxy para mejor rendimiento
-        configure: (proxy, options) => {
-          proxy.on('error', (err, req, res) => {
-            console.error('Proxy error:', err);
-          });
-        },
+    // Solo proxy en desarrollo
+    ...(process.env.NODE_ENV === 'development' && {
+      proxy: {
+        '/api': {
+          target: 'http://localhost:8000',
+          changeOrigin: true,
+          secure: false,
+          rewrite: (path) => path.replace(/^\/api/, '/api'),
+          configure: (proxy, options) => {
+            proxy.on('error', (err, req, res) => {
+              console.error('Proxy error:', err);
+            });
+          },
+        }
       }
-    }
+    })
   },
   build: {
     outDir: 'dist',

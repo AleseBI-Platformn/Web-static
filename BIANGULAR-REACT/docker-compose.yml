@@ -1,0 +1,44 @@
+# ============================================
+# DOCKER COMPOSE PARA DESARROLLO LOCAL
+# ============================================
+
+version: '3.8'
+
+services:
+  alese-corp-web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "3000:80"
+    environment:
+      - NODE_ENV=development
+      - VITE_API_MODE=production
+      - VITE_API_BASE_URL=/api
+    volumes:
+      # Para desarrollo, montar código fuente
+      - ./api:/var/www/html/api
+    networks:
+      - alese-network
+
+  # Opcional: Base de datos local para testing
+  mysql:
+    image: mysql:8.0
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: alese_corp_local
+      MYSQL_USER: alese
+      MYSQL_PASSWORD: alese123
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+    networks:
+      - alese-network
+
+networks:
+  alese-network:
+    driver: bridge
+
+volumes:
+  mysql_data:
