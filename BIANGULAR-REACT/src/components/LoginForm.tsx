@@ -163,7 +163,7 @@ const LoginForm = () => {
                 Todos los derechos reservados
               </p>
               <p className="text-xs text-gray-500">
-                Desarrollado por <a href="http://www.linkedin.com/in/yea-software-124247376" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">YEA Software</a>
+                Desarrollado por <a href="https://www.linkedin.com/company/yea-software/" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">YEA Software</a>
               </p>
             </div>
           </CardContent>
