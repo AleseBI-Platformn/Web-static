@@ -17,6 +17,7 @@ RUN npm ci
 # Copiar código fuente del frontend
 COPY src/ ./src/
 COPY public/ ./public/
+COPY assets/ ./assets/
 COPY index.html ./
 COPY vite.config.ts ./
 COPY tsconfig*.json ./
