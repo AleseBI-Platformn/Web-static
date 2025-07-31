@@ -8,6 +8,57 @@ import { useCurrentMenu, useAllMenus } from '../hooks/useBiAleseMenus';
 export const DynamicMenuView: React.FC = () => {
   const { currentMenu, isLoading: menuLoading, error: menuError } = useCurrentMenu();
 
+  // SOLUCIÓN 4: Modo de visualización adaptativo
+  const getViewMode = () => {
+    const hasCustomSize = currentMenu?.ancho && currentMenu?.alto;
+    const anchoNum = currentMenu?.ancho ? parseInt(currentMenu.ancho) : 0;
+    const altoNum = currentMenu?.alto ? parseInt(currentMenu.alto) : 0;
+    const isLargeSize = hasCustomSize && (anchoNum > 1200 || altoNum > 800);
+    
+    if (hasCustomSize && !isLargeSize) {
+      return 'fixed'; // Usar dimensiones exactas de BD
+    } else if (hasCustomSize && isLargeSize) {
+      return 'responsive-large'; // Responsive pero respetando proporciones
+    } else {
+      return 'fullscreen'; // Pantalla completa
+    }
+  };
+
+  // Función para obtener las dimensiones según el modo
+  const getDisplayStyle = () => {
+    if (!currentMenu) return { width: '100%', height: 'calc(100vh - 140px)', mode: 'fullscreen' };
+    
+    const viewMode = getViewMode();
+    
+    switch (viewMode) {
+      case 'fixed':
+        // Usar dimensiones exactas de la base de datos SIN fallbacks
+        return {
+          width: currentMenu.ancho!,
+          height: currentMenu.alto!,
+          mode: 'fixed' as const
+        };
+      
+      case 'responsive-large':
+        // Para reportes grandes, mantener proporciones pero responsive
+        const anchoNum = parseInt(currentMenu.ancho!);
+        const altoNum = parseInt(currentMenu.alto!);
+        const aspectRatio = altoNum / anchoNum;
+        return {
+          width: '100%',
+          height: `min(calc(100vh - 140px), calc(100vw * ${aspectRatio}))`,
+          mode: 'responsive-large' as const
+        };
+      
+      default: // 'fullscreen'
+        return {
+          width: '100%',
+          height: 'calc(100vh - 140px)',
+          mode: 'fullscreen' as const
+        };
+    }
+  };
+
   if (menuLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
@@ -71,21 +122,24 @@ export const DynamicMenuView: React.FC = () => {
       <div className="max-w-7xl mx-auto p-4">
         {currentMenu.vista ? (
           <div className="bg-white rounded-lg shadow-lg overflow-hidden">
-            {/* iframe dinámico de PowerBI como BiAleseCorp */}
-            <iframe
-              title={currentMenu.menu}
-              width={currentMenu.ancho || '100%'}
-              height={currentMenu.alto || '600px'}
-              src={currentMenu.vista}
-              frameBorder="0"
-              allowFullScreen={true}
-              className="w-full"
-              style={{
-                width: currentMenu.ancho || '100%',
-                height: currentMenu.alto || '600px',
-                minHeight: '600px'
-              }}
-            />
+            {/* iframe dinámico con sistema adaptativo */}
+            {(() => {
+              const style = getDisplayStyle();
+              return (
+                <iframe
+                  title={currentMenu.menu}
+                  src={currentMenu.vista}
+                  frameBorder="0"
+                  allowFullScreen={true}
+                  className={`border-0 ${style.mode === 'fixed' ? '' : 'w-full'}`}
+                  style={{
+                    width: style.width as string,
+                    height: style.height as string,
+                    minHeight: style.mode === 'fixed' ? 'auto' : '600px'
+                  }}
+                />
+              );
+            })()}
           </div>
         ) : (
           <div className="bg-white rounded-lg shadow-lg p-8 text-center">
@@ -99,7 +153,7 @@ export const DynamicMenuView: React.FC = () => {
       </div>
 
       {/* Debug info (solo en desarrollo) */}
-      {process.env.NODE_ENV === 'development' && (
+      {process.env.NODE_ENV === 'development' && currentMenu && (
         <div className="fixed bottom-4 right-4 bg-black bg-opacity-75 text-white p-3 rounded-lg text-xs max-w-sm">
           <h4 className="font-bold mb-2">🔧 Debug - Menú Actual:</h4>
           <div className="space-y-1">
@@ -107,7 +161,9 @@ export const DynamicMenuView: React.FC = () => {
             <div><strong>URL:</strong> {currentMenu.url}</div>
             <div><strong>Vista:</strong> {currentMenu.vista ? '✅' : '❌'}</div>
             <div><strong>Parent:</strong> {currentMenu.parent || 'null'}</div>
-            <div><strong>Dimensiones:</strong> {currentMenu.ancho} x {currentMenu.alto}</div>
+            <div><strong>Dimensiones BD:</strong> {currentMenu.ancho} x {currentMenu.alto}</div>
+            <div><strong>Modo:</strong> {getDisplayStyle().mode}</div>
+            <div><strong>Dimensiones aplicadas:</strong> {getDisplayStyle().width} x {getDisplayStyle().height}</div>
           </div>
         </div>
       )}

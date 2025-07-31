@@ -1,0 +1,38 @@
+RewriteEngine On
+
+RewriteEngine On
+
+# SOLUCIÓN 1: Configuración optimizada para React SPA en cPanel
+# Elimina problemas de 404 al hacer F5 en rutas de React Router
+
+# API calls - permitir acceso directo a archivos PHP (con más especificidad)
+RewriteCond %{REQUEST_FILENAME} -f
+RewriteRule ^api/.*\.php$ - [L]
+
+# Assets estáticos - permitir acceso directo (mejorado)
+RewriteCond %{REQUEST_FILENAME} -f
+RewriteRule ^(assets/|.*\.(css|js|png|jpg|jpeg|gif|svg|ico|woff|woff2|ttf|eot|json|map))$ - [L]
+
+# React SPA - redirigir todas las rutas que no existen a index.html (mejorado)
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteCond %{REQUEST_URI} !^/api/
+RewriteCond %{REQUEST_URI} !^/assets/
+RewriteRule ^(.*)$ index.html [QSA,L]
+
+# Configuración de seguridad
+<Files ".env*">
+    Order allow,deny
+    Deny from all
+</Files>
+
+# Configuración de cache para assets
+<IfModule mod_expires.c>
+    ExpiresActive on
+    ExpiresByType text/css "access plus 1 year"
+    ExpiresByType application/javascript "access plus 1 year"
+    ExpiresByType image/png "access plus 1 year"
+    ExpiresByType image/jpg "access plus 1 year"
+    ExpiresByType image/jpeg "access plus 1 year"
+    ExpiresByType image/gif "access plus 1 year"
+</IfModule>

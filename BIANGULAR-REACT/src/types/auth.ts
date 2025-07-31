@@ -19,6 +19,7 @@ export interface Menu {
   alto: string;
   parent: number | null;
   children: Menu[];
+  display_mode?: 'fullscreen' | 'fixed' | 'responsive';
 }
 
 export interface LoginResponse {
