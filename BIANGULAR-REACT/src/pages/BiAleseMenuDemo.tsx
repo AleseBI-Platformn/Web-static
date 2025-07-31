@@ -73,9 +73,11 @@ const BiAleseMenuDemo: React.FC = () => {
                     </p>
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700">Dimensiones</label>
+                    <label className="block text-sm font-medium text-gray-700">Dimensiones BD</label>
                     <p className="mt-1 text-sm text-gray-900">
-                      {currentMenu.ancho || 'Auto'} x {currentMenu.alto || 'Auto'}
+                      {currentMenu.ancho && currentMenu.alto 
+                        ? `${currentMenu.ancho} x ${currentMenu.alto}` 
+                        : 'No configuradas'}
                     </p>
                   </div>
                 </div>

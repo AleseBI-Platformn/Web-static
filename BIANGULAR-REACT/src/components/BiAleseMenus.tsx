@@ -32,10 +32,15 @@ export const DynamicMenuView: React.FC = () => {
     
     switch (viewMode) {
       case 'fixed':
-        // Usar dimensiones exactas de la base de datos SIN fallbacks
+        // ANCHO SIEMPRE 100% RESPONSIVE - ALTO de la BD pero calculado proporcionalmente
+        const anchoOriginal = parseInt(currentMenu.ancho!);
+        const altoOriginal = parseInt(currentMenu.alto!);
+        const aspectRatio = altoOriginal / anchoOriginal;
+        
         return {
-          width: currentMenu.ancho!,
-          height: currentMenu.alto!,
+          width: '100%', // SIEMPRE 100% responsive
+          height: `calc(100vw * ${aspectRatio})`, // Alto proporcional basado en el aspect ratio de la BD
+          maxHeight: 'calc(100vh - 140px)', // Limitar altura máxima
           mode: 'fixed' as const
         };
       
@@ -43,10 +48,10 @@ export const DynamicMenuView: React.FC = () => {
         // Para reportes grandes, mantener proporciones pero responsive
         const anchoNum = parseInt(currentMenu.ancho!);
         const altoNum = parseInt(currentMenu.alto!);
-        const aspectRatio = altoNum / anchoNum;
+        const aspectRatio2 = altoNum / anchoNum;
         return {
-          width: '100%',
-          height: `min(calc(100vh - 140px), calc(100vw * ${aspectRatio}))`,
+          width: '100%', // SIEMPRE 100% responsive
+          height: `min(calc(100vh - 140px), calc(100vw * ${aspectRatio2}))`,
           mode: 'responsive-large' as const
         };
       
@@ -89,9 +94,9 @@ export const DynamicMenuView: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Header como BiAleseCorp */}
-      <div className="bg-white shadow-sm border-b border-gray-200 p-4">
+    <div className="h-screen overflow-hidden bg-gray-50 flex flex-col">
+      {/* Header fijo - sin scroll */}
+      <div className="bg-white shadow-sm border-b border-gray-200 p-4 flex-shrink-0">
         <div className="max-w-7xl mx-auto">
           {/* Título de la página (como $pagina['menu']) */}
           <h2 className="text-3xl font-bold text-gray-900 mb-2">
@@ -118,36 +123,35 @@ export const DynamicMenuView: React.FC = () => {
         </div>
       </div>
 
-      {/* Contenido del menú */}
-      <div className="max-w-7xl mx-auto p-4">
+      {/* Contenido del iframe - ocupa el resto de la pantalla */}
+      <div className="flex-1 overflow-hidden">
         {currentMenu.vista ? (
-          <div className="bg-white rounded-lg shadow-lg overflow-hidden">
-            {/* iframe dinámico con sistema adaptativo */}
-            {(() => {
-              const style = getDisplayStyle();
-              return (
-                <iframe
-                  title={currentMenu.menu}
-                  src={currentMenu.vista}
-                  frameBorder="0"
-                  allowFullScreen={true}
-                  className={`border-0 ${style.mode === 'fixed' ? '' : 'w-full'}`}
-                  style={{
-                    width: style.width as string,
-                    height: style.height as string,
-                    minHeight: style.mode === 'fixed' ? 'auto' : '600px'
-                  }}
-                />
-              );
-            })()}
-          </div>
+          /* iframe que ocupa toda la pantalla disponible - SIN scroll externo */
+          (() => {
+            const style = getDisplayStyle();
+            return (
+              <iframe
+                title={currentMenu.menu}
+                src={currentMenu.vista || ''}
+                frameBorder="0"
+                allowFullScreen={true}
+                className="w-full h-full border-0"
+                style={{
+                  width: '100%',
+                  height: style.height as string
+                }}
+              />
+            );
+          })()
         ) : (
-          <div className="bg-white rounded-lg shadow-lg p-8 text-center">
-            <div className="text-6xl text-gray-300 mb-4">📊</div>
-            <h3 className="text-xl font-semibold text-gray-700 mb-2">Vista no configurada</h3>
-            <p className="text-gray-500">
-              Este menú no tiene una vista configurada aún.
-            </p>
+          <div className="flex items-center justify-center h-full bg-gradient-to-br from-gray-50 to-gray-100">
+            <div className="text-center">
+              <div className="text-6xl text-gray-300 mb-4">📊</div>
+              <h3 className="text-xl font-semibold text-gray-700 mb-2">Vista no configurada</h3>
+              <p className="text-gray-500">
+                Este menú no tiene una vista configurada aún.
+              </p>
+            </div>
           </div>
         )}
       </div>

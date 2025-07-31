@@ -1,7 +1,5 @@
 RewriteEngine On
 
-RewriteEngine On
-
 # SOLUCIÓN 1: Configuración optimizada para React SPA en cPanel
 # Elimina problemas de 404 al hacer F5 en rutas de React Router
 
