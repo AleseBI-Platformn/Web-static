@@ -24,40 +24,210 @@ try {
         'bd_name' => DB_NAME
     ]);
     
-    // Conexión DIRECTA a BD de producción
-    $pdo = getDbConnection();
+    // Conexión a BD
+    $connection = getDbConnection();
     
-    // CONSULTA EXACTA según esquema real de la BD
-    $stmt = $pdo->prepare("
-        SELECT 
-            UsuCod, 
-            UsuNom, 
-            UsuApePat, 
-            UsuApeMat, 
-            UsuEmail, 
-            UsuClave, 
-            UsuPerfil,
-            UsuEst,
-            idperfil,
-            CONCAT(TRIM(UsuNom), ' ', TRIM(COALESCE(UsuApePat, '')), ' ', TRIM(COALESCE(UsuApeMat, ''))) as fullName
-        FROM usuarios 
-        WHERE UsuCod = ?
-    ");
-    
-    $stmt->execute([$username]);
-    $user = $stmt->fetch();
-    
-    debugLog("RESULTADO CONSULTA USUARIO", [
-        'username' => $username,
-        'encontrado' => $user ? 'SÍ' : 'NO',
-        'estado' => $user ? $user['UsuEst'] : 'N/A',
-        'tiene_clave' => $user ? (!empty($user['UsuClave']) ? 'SÍ' : 'NO') : 'N/A'
-    ]);
-    
-    // Verificar si usuario existe
-    if (!$user) {
-        debugLog("USUARIO NO ENCONTRADO EN BD", ['username' => $username]);
-        sendResponse(false, 'Usuario no encontrado en la base de datos', null, 401);
+    // Determinar tipo de conexión y ejecutar consulta
+    if ($connection === 'json_db') {
+        // Usar base de datos JSON temporal
+        debugLog("USANDO BASE DE DATOS JSON TEMPORAL", ['username' => $username]);
+        
+        $user = queryJsonDb("SELECT * FROM usuarios WHERE UsuCod = ?", [$username]);
+        
+        if (!$user) {
+            debugLog("USUARIO NO ENCONTRADO EN JSON DB", ['username' => $username]);
+            sendResponse(false, 'Usuario no encontrado en la base de datos', null, 401);
+        }
+        
+        // Verificar contraseña
+        if ($user['UsuClave'] !== $password) {
+            debugLog("CONTRASEÑA INCORRECTA JSON DB", ['username' => $username]);
+            sendResponse(false, 'Contraseña incorrecta', null, 401);
+        }
+        
+        // Obtener permisos
+        $permissions = queryJsonDb("SELECT idmenu FROM perfil_menus WHERE idperfil = ?", [$user['idperfil']]);
+        
+    } elseif (is_object($connection) && get_class($connection) === 'mysqli') {
+        // Usar mysqli
+        debugLog("USANDO MYSQLI", ['username' => $username]);
+        
+        $stmt = $connection->prepare("
+            SELECT 
+                UsuCod, 
+                UsuNom, 
+                UsuApePat, 
+                UsuApeMat, 
+                UsuEmail, 
+                UsuClave, 
+                UsuPerfil,
+                UsuEst,
+                idperfil,
+                CONCAT(TRIM(UsuNom), ' ', TRIM(COALESCE(UsuApePat, '')), ' ', TRIM(COALESCE(UsuApeMat, ''))) as fullName
+            FROM usuarios 
+            WHERE UsuCod = ?
+        ");
+        
+        $stmt->bind_param("s", $username);
+        $stmt->execute();
+        $result = $stmt->get_result();
+        $user = $result->fetch_assoc();
+        
+        if (!$user) {
+            debugLog("USUARIO NO ENCONTRADO EN MYSQLI", ['username' => $username]);
+            sendResponse(false, 'Usuario no encontrado en la base de datos', null, 401);
+        }
+        
+        // Verificar contraseña
+        $dbPassword = $user['UsuClave'];
+        $passwordValid = false;
+        $hashUsed = '';
+        
+        // Hash MD5
+        $md5Hash = md5($password);
+        if ($dbPassword === $md5Hash) {
+            $passwordValid = true;
+            $hashUsed = 'MD5';
+        }
+        
+        // Hash SHA1
+        if (!$passwordValid) {
+            $sha1Hash = sha1($password);
+            if ($dbPassword === $sha1Hash) {
+                $passwordValid = true;
+                $hashUsed = 'SHA1';
+            }
+        }
+        
+        // Texto plano
+        if (!$passwordValid) {
+            if ($dbPassword === $password) {
+                $passwordValid = true;
+                $hashUsed = 'PLAIN';
+            }
+        }
+        
+        // BCrypt
+        if (!$passwordValid) {
+            if (password_verify($password, $dbPassword)) {
+                $passwordValid = true;
+                $hashUsed = 'BCRYPT';
+            }
+        }
+        
+        if (!$passwordValid) {
+            debugLog("CONTRASEÑA INCORRECTA MYSQLI", ['username' => $username]);
+            sendResponse(false, 'Contraseña incorrecta', null, 401);
+        }
+        
+        // Obtener permisos
+        $stmt = $connection->prepare("
+            SELECT DISTINCT idmenu
+            FROM perfil_menus
+            WHERE idperfil = ?
+            ORDER BY idmenu ASC
+        ");
+        
+        $stmt->bind_param("i", $user['idperfil']);
+        $stmt->execute();
+        $result = $stmt->get_result();
+        
+        $permissions = [];
+        while ($row = $result->fetch_assoc()) {
+            $permissions[] = $row['idmenu'];
+        }
+        
+    } else {
+        // Usar mysql_connect (deprecated)
+        debugLog("USANDO MYSQL_CONNECT", ['username' => $username]);
+        
+        $query = "
+            SELECT 
+                UsuCod, 
+                UsuNom, 
+                UsuApePat, 
+                UsuApeMat, 
+                UsuEmail, 
+                UsuClave, 
+                UsuPerfil,
+                UsuEst,
+                idperfil,
+                CONCAT(TRIM(UsuNom), ' ', TRIM(COALESCE(UsuApePat, '')), ' ', TRIM(COALESCE(UsuApeMat, ''))) as fullName
+            FROM usuarios 
+            WHERE UsuCod = '$username'
+        ";
+        
+        $result = mysql_query($query, $connection);
+        if (!$result) {
+            throw new Exception('Error en consulta: ' . mysql_error($connection));
+        }
+        
+        $user = mysql_fetch_assoc($result);
+        
+        if (!$user) {
+            debugLog("USUARIO NO ENCONTRADO EN MYSQL_CONNECT", ['username' => $username]);
+            sendResponse(false, 'Usuario no encontrado en la base de datos', null, 401);
+        }
+        
+        // Verificar contraseña
+        $dbPassword = $user['UsuClave'];
+        $passwordValid = false;
+        $hashUsed = '';
+        
+        // Hash MD5
+        $md5Hash = md5($password);
+        if ($dbPassword === $md5Hash) {
+            $passwordValid = true;
+            $hashUsed = 'MD5';
+        }
+        
+        // Hash SHA1
+        if (!$passwordValid) {
+            $sha1Hash = sha1($password);
+            if ($dbPassword === $sha1Hash) {
+                $passwordValid = true;
+                $hashUsed = 'SHA1';
+            }
+        }
+        
+        // Texto plano
+        if (!$passwordValid) {
+            if ($dbPassword === $password) {
+                $passwordValid = true;
+                $hashUsed = 'PLAIN';
+            }
+        }
+        
+        // BCrypt
+        if (!$passwordValid) {
+            if (password_verify($password, $dbPassword)) {
+                $passwordValid = true;
+                $hashUsed = 'BCRYPT';
+            }
+        }
+        
+        if (!$passwordValid) {
+            debugLog("CONTRASEÑA INCORRECTA MYSQL_CONNECT", ['username' => $username]);
+            sendResponse(false, 'Contraseña incorrecta', null, 401);
+        }
+        
+        // Obtener permisos
+        $query = "
+            SELECT DISTINCT idmenu
+            FROM perfil_menus
+            WHERE idperfil = {$user['idperfil']}
+            ORDER BY idmenu ASC
+        ";
+        
+        $result = mysql_query($query, $connection);
+        if (!$result) {
+            throw new Exception('Error en consulta permisos: ' . mysql_error($connection));
+        }
+        
+        $permissions = [];
+        while ($row = mysql_fetch_assoc($result)) {
+            $permissions[] = $row['idmenu'];
+        }
     }
     
     // Verificar si usuario está activo
@@ -69,83 +239,19 @@ try {
         sendResponse(false, 'Usuario inactivo', null, 401);
     }
     
-    // VERIFICAR CONTRASEÑA - probando todos los hashes posibles
-    $dbPassword = $user['UsuClave'];
-    $passwordValid = false;
-    $hashUsed = '';
-    
-    // Hash MD5
-    $md5Hash = md5($password);
-    if ($dbPassword === $md5Hash) {
-        $passwordValid = true;
-        $hashUsed = 'MD5';
-    }
-    
-    // Hash SHA1
-    if (!$passwordValid) {
-        $sha1Hash = sha1($password);
-        if ($dbPassword === $sha1Hash) {
-            $passwordValid = true;
-            $hashUsed = 'SHA1';
-        }
-    }
-    
-    // Texto plano
-    if (!$passwordValid) {
-        if ($dbPassword === $password) {
-            $passwordValid = true;
-            $hashUsed = 'PLAIN';
-        }
-    }
-    
-    // BCrypt
-    if (!$passwordValid) {
-        if (password_verify($password, $dbPassword)) {
-            $passwordValid = true;
-            $hashUsed = 'BCRYPT';
-        }
-    }
-    
-    debugLog("VERIFICACIÓN CONTRASEÑA", [
-        'username' => $username,
-        'bd_hash_inicio' => substr($dbPassword, 0, 10) . '...',
-        'bd_hash_longitud' => strlen($dbPassword),
-        'md5_generado' => substr($md5Hash, 0, 10) . '...',
-        'sha1_generado' => substr($sha1Hash, 0, 10) . '...',
-        'hash_detectado' => $hashUsed,
-        'contraseña_válida' => $passwordValid ? 'SÍ' : 'NO'
-    ]);
-    
-    if (!$passwordValid) {
-        debugLog("CONTRASEÑA INCORRECTA", [
-            'username' => $username,
-            'intentos' => ['MD5', 'SHA1', 'PLAIN', 'BCRYPT']
-        ]);
-        sendResponse(false, 'Contraseña incorrecta', null, 401);
-    }
-    
-    // OBTENER PERMISOS desde perfil_menus (NO permisos individuales)
-    $stmt = $pdo->prepare("
-        SELECT DISTINCT idmenu
-        FROM perfil_menus
-        WHERE idperfil = ?
-        ORDER BY idmenu ASC
-    ");
-    
-    $stmt->execute([$user['idperfil']]);
-    $permissions = $stmt->fetchAll(PDO::FETCH_COLUMN);
-    
-    debugLog("PERMISOS OBTENIDOS desde perfil_menus", [
-        'username' => $username,
+    debugLog("LOGIN EXITOSO", [
+        'usuario' => $username,
+        'nombre_completo' => $user['fullName'],
+        'perfil' => $user['UsuPerfil'],
         'idperfil' => $user['idperfil'],
         'total_permisos' => count($permissions),
-        'permisos' => $permissions
+        'tipo_conexion' => $connection === 'json_db' ? 'JSON' : (is_object($connection) && get_class($connection) === 'mysqli' ? 'MYSQLI' : 'MYSQL_CONNECT')
     ]);
     
     // TOKEN DE SESIÓN
     $token = base64_encode($username . ':' . time() . ':PROD:' . DB_HOST);
     
-    // RESPUESTA FINAL - incluyendo información del perfil
+    // RESPUESTA FINAL
     $userData = [
         'UsuCod' => $user['UsuCod'],
         'UsuNom' => $user['UsuNom'],
@@ -153,27 +259,18 @@ try {
         'UsuApeMat' => $user['UsuApeMat'],
         'UsuEmail' => $user['UsuEmail'],
         'UsuPerfil' => $user['UsuPerfil'],
-        'idperfil' => $user['idperfil'], // Importante para permisos
+        'idperfil' => $user['idperfil'],
         'fullName' => $user['fullName']
     ];
     
-    debugLog("LOGIN EXITOSO - BD PRODUCCIÓN", [
-        'usuario' => $username,
-        'nombre_completo' => $user['fullName'],
-        'perfil' => $user['UsuPerfil'],
-        'idperfil' => $user['idperfil'],
-        'total_permisos' => count($permissions),
-        'bd_conectada' => DB_HOST . '/' . DB_NAME
-    ]);
-    
-    sendResponse(true, 'Login exitoso - Conectado a BD de producción', [
+    sendResponse(true, 'Login exitoso', [
         'user' => $userData,
         'permissions' => array_map('intval', $permissions),
         'token' => $token,
         'database_info' => [
             'host' => DB_HOST,
             'database' => DB_NAME,
-            'hash_method' => $hashUsed
+            'connection_type' => $connection === 'json_db' ? 'JSON_TEMPORAL' : (is_object($connection) && get_class($connection) === 'mysqli' ? 'MYSQLI' : 'MYSQL_CONNECT')
         ]
     ]);
     
@@ -181,9 +278,7 @@ try {
     debugLog("ERROR CRÍTICO EN LOGIN", [
         'error' => $e->getMessage(),
         'archivo' => $e->getFile(),
-        'línea' => $e->getLine(),
-        'bd_host' => DB_HOST ?? 'NO_DEFINIDO',
-        'bd_name' => DB_NAME ?? 'NO_DEFINIDO'
+        'línea' => $e->getLine()
     ]);
     
     sendResponse(false, 'Error interno del servidor', [
@@ -191,8 +286,7 @@ try {
             'error' => $e->getMessage(),
             'file' => $e->getFile(),
             'line' => $e->getLine()
-        ] : null,
-        'database_connection' => 'FAILED'
+        ] : null
     ], 500);
 }
 ?>

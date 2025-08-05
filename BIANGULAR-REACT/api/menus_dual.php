@@ -26,38 +26,164 @@ try {
     debugLog("Obteniendo menús", ['permissions' => $permissions]);
     
     // Conexión a la base de datos
-    $pdo = getDbConnection();
+    $connection = getDbConnection();
     
-    // Crear placeholders para la consulta IN
-    $placeholders = str_repeat('?,', count($permissions) - 1) . '?';
+    // Determinar tipo de conexión y ejecutar consulta
+    if ($connection === 'json_db') {
+        // Usar base de datos JSON temporal
+        debugLog("USANDO BASE DE DATOS JSON TEMPORAL PARA MENÚS", ['permissions' => $permissions]);
+        
+        // Datos de prueba para menús
+        $testMenus = [
+            1 => ['idmenu' => 1, 'menu' => 'Dashboard', 'vista' => 'dashboard', 'icono' => 'home', 'estado' => '1', 'url' => '/dashboard', 'ancho' => 12, 'alto' => 6, 'parent' => null],
+            2 => ['idmenu' => 2, 'menu' => 'Usuarios', 'vista' => 'usuarios', 'icono' => 'users', 'estado' => '1', 'url' => '/usuarios', 'ancho' => 12, 'alto' => 6, 'parent' => null],
+            3 => ['idmenu' => 3, 'menu' => 'Configuración', 'vista' => 'config', 'icono' => 'settings', 'estado' => '1', 'url' => '/config', 'ancho' => 12, 'alto' => 6, 'parent' => null],
+            4 => ['idmenu' => 4, 'menu' => 'Reportes', 'vista' => 'reportes', 'icono' => 'chart', 'estado' => '1', 'url' => '/reportes', 'ancho' => 12, 'alto' => 6, 'parent' => null],
+            5 => ['idmenu' => 5, 'menu' => 'Administración', 'vista' => 'admin', 'icono' => 'admin', 'estado' => '1', 'url' => '/admin', 'ancho' => 12, 'alto' => 6, 'parent' => null]
+        ];
+        
+        // Filtrar menús según permisos
+        $menusData = [];
+        foreach ($permissions as $permission) {
+            if (isset($testMenus[$permission])) {
+                $menusData[] = $testMenus[$permission];
+            }
+        }
+        
+    } elseif (is_object($connection) && get_class($connection) === 'mysqli') {
+        // Usar mysqli
+        debugLog("USANDO MYSQLI PARA MENÚS", ['permissions' => $permissions]);
+        
+        // Crear placeholders para la consulta IN
+        $placeholders = str_repeat('?,', count($permissions) - 1) . '?';
+        
+        // PASO 1: Obtener menús directos con permisos
+        $stmt = $connection->prepare("
+            SELECT 
+                m.idmenu,
+                m.menu,
+                m.vista,
+                m.icono,
+                m.estado,
+                m.url,
+                m.ancho,
+                m.alto,
+                m.parent
+            FROM menus m
+            WHERE m.idmenu IN ($placeholders)
+            AND m.estado = '1'
+        ");
+        
+        $stmt->bind_param(str_repeat('i', count($permissions)), ...$permissions);
+        $stmt->execute();
+        $result = $stmt->get_result();
+        $menusDirectos = [];
+        while ($row = $result->fetch_assoc()) {
+            $menusDirectos[] = $row;
+        }
+        
+        // Obtener menús padre recursivamente
+        $menusData = getMenusWithParents($connection, $menusDirectos);
+        
+    } elseif (is_object($connection) && get_class($connection) === 'PDO') {
+        // Usar PDO
+        debugLog("USANDO PDO PARA MENÚS", ['permissions' => $permissions]);
+        
+        // Crear placeholders para la consulta IN
+        $placeholders = str_repeat('?,', count($permissions) - 1) . '?';
+        
+        // PASO 1: Obtener menús directos con permisos
+        $stmt = $connection->prepare("
+            SELECT 
+                m.idmenu,
+                m.menu,
+                m.vista,
+                m.icono,
+                m.estado,
+                m.url,
+                m.ancho,
+                m.alto,
+                m.parent
+            FROM menus m
+            WHERE m.idmenu IN ($placeholders)
+            AND m.estado = '1'
+        ");
+        
+        $stmt->execute($permissions);
+        $menusDirectos = $stmt->fetchAll();
+        
+        // Obtener menús padre recursivamente
+        $menusData = getMenusWithParents($connection, $menusDirectos);
+        
+    } else {
+        // Usar mysql_connect (deprecated)
+        debugLog("USANDO MYSQL_CONNECT PARA MENÚS", ['permissions' => $permissions]);
+        
+        // Crear placeholders para la consulta IN
+        $placeholders = implode(',', $permissions);
+        
+        // PASO 1: Obtener menús directos con permisos
+        $query = "
+            SELECT 
+                m.idmenu,
+                m.menu,
+                m.vista,
+                m.icono,
+                m.estado,
+                m.url,
+                m.ancho,
+                m.alto,
+                m.parent
+            FROM menus m
+            WHERE m.idmenu IN ($placeholders)
+            AND m.estado = '1'
+        ";
+        
+        $result = mysql_query($query, $connection);
+        if (!$result) {
+            throw new Exception('Error en consulta: ' . mysql_error($connection));
+        }
+        
+        $menusDirectos = [];
+        while ($row = mysql_fetch_assoc($result)) {
+            $menusDirectos[] = $row;
+        }
+        
+        // Obtener menús padre recursivamente
+        $menusData = getMenusWithParents($connection, $menusDirectos);
+    }
     
-    // PASO 1: Obtener menús directos con permisos (SÍ filtrar estado en menús principales)
-    $stmt = $pdo->prepare("
-        SELECT 
-            m.idmenu,
-            m.menu,
-            m.vista,
-            m.icono,
-            m.estado,
-            m.url,
-            m.ancho,
-            m.alto,
-            m.parent
-        FROM menus m
-        WHERE m.idmenu IN ($placeholders)
-        AND m.estado = '1'
-    ");
-    
-    $stmt->execute($permissions);
-    $menusDirectos = $stmt->fetchAll();
-    
-    debugLog("Menús directos obtenidos", [
-        'count' => count($menusDirectos),
-        'menus' => array_map(function($m) { 
-            return ['id' => $m['idmenu'], 'name' => $m['menu'], 'parent' => $m['parent']]; 
-        }, $menusDirectos)
+    debugLog("Menús obtenidos exitosamente", [
+        'count' => count($menusData),
+        'tipo_conexion' => $connection === 'json_db' ? 'JSON' : (is_object($connection) ? get_class($connection) : 'UNKNOWN')
     ]);
     
+    sendResponse(true, 'Menús obtenidos exitosamente', [
+        'menus' => $menusData,
+        'total' => count($menusData),
+        'connection_type' => $connection === 'json_db' ? 'JSON_TEMPORAL' : (is_object($connection) ? get_class($connection) : 'UNKNOWN')
+    ]);
+    
+} catch (Exception $e) {
+    debugLog("ERROR CRÍTICO EN MENÚS", [
+        'error' => $e->getMessage(),
+        'archivo' => $e->getFile(),
+        'línea' => $e->getLine()
+    ]);
+    
+    sendResponse(false, 'Error interno del servidor', [
+        'debug' => ENVIRONMENT === 'local' ? [
+            'error' => $e->getMessage(),
+            'file' => $e->getFile(),
+            'line' => $e->getLine()
+        ] : null
+    ], 500);
+}
+
+/**
+ * Función auxiliar para obtener menús con padres recursivamente
+ */
+function getMenusWithParents($connection, $menusDirectos) {
     // PASO 2: Obtener TODOS los menús padre necesarios (recursivamente)
     $allMenuIds = array_column($menusDirectos, 'idmenu');
     $parentIds = [];
@@ -83,24 +209,81 @@ try {
         debugLog("Iteración $iteracion - Buscando padres", ['parent_ids' => $parentIds]);
         
         $parentPlaceholders = str_repeat('?,', count($parentIds) - 1) . '?';
-        $parentStmt = $pdo->prepare("
-            SELECT 
-                m.idmenu,
-                m.menu,
-                m.vista,
-                m.icono,
-                m.estado,
-                m.url,
-                m.ancho,
-                m.alto,
-                m.parent
-            FROM menus m
-            WHERE m.idmenu IN ($parentPlaceholders)
-            AND m.estado = '1'
-        ");
         
-        $parentStmt->execute($parentIds);
-        $menusPadre = $parentStmt->fetchAll();
+        if (is_object($connection) && get_class($connection) === 'mysqli') {
+            $parentStmt = $connection->prepare("
+                SELECT 
+                    m.idmenu,
+                    m.menu,
+                    m.vista,
+                    m.icono,
+                    m.estado,
+                    m.url,
+                    m.ancho,
+                    m.alto,
+                    m.parent
+                FROM menus m
+                WHERE m.idmenu IN ($parentPlaceholders)
+                AND m.estado = '1'
+            ");
+            
+            $parentStmt->bind_param(str_repeat('i', count($parentIds)), ...$parentIds);
+            $parentStmt->execute();
+            $result = $parentStmt->get_result();
+            $menusPadre = [];
+            while ($row = $result->fetch_assoc()) {
+                $menusPadre[] = $row;
+            }
+            
+        } elseif (is_object($connection) && get_class($connection) === 'PDO') {
+            $parentStmt = $connection->prepare("
+                SELECT 
+                    m.idmenu,
+                    m.menu,
+                    m.vista,
+                    m.icono,
+                    m.estado,
+                    m.url,
+                    m.ancho,
+                    m.alto,
+                    m.parent
+                FROM menus m
+                WHERE m.idmenu IN ($parentPlaceholders)
+                AND m.estado = '1'
+            ");
+            
+            $parentStmt->execute($parentIds);
+            $menusPadre = $parentStmt->fetchAll();
+            
+        } else {
+            // mysql_connect
+            $parentPlaceholders = implode(',', $parentIds);
+            $query = "
+                SELECT 
+                    m.idmenu,
+                    m.menu,
+                    m.vista,
+                    m.icono,
+                    m.estado,
+                    m.url,
+                    m.ancho,
+                    m.alto,
+                    m.parent
+                FROM menus m
+                WHERE m.idmenu IN ($parentPlaceholders)
+                AND m.estado = '1'
+            ";
+            
+            $result = mysql_query($query, $connection);
+            if (!$result) {
+                throw new Exception('Error en consulta padres: ' . mysql_error($connection));
+            }
+            
+            $menusPadre = [];
+            while ($row = mysql_fetch_assoc($result)) {
+                $menusPadre[] = $row;
+            }
+        }
         
         if (empty($menusPadre)) break;
         
@@ -127,102 +310,18 @@ try {
     // Ordenar menús: primero padres (parent=null o 0), luego hijos
     usort($menusData, function($a, $b) {
         // Si ambos son padres o ambos son hijos, ordenar por idmenu
-        if (($a['parent'] === null || $a['parent'] === '0') && ($b['parent'] === null || $b['parent'] === '0')) {
+        if (($a['parent'] === null || $a['parent'] === '0' || $a['parent'] === 0) === 
+            ($b['parent'] === null || $b['parent'] === '0' || $b['parent'] === 0)) {
             return $a['idmenu'] - $b['idmenu'];
         }
-        if (($a['parent'] !== null && $a['parent'] !== '0') && ($b['parent'] !== null && $b['parent'] !== '0')) {
-            return $a['idmenu'] - $b['idmenu'];
-        }
-        // Padres primero
-        if ($a['parent'] === null || $a['parent'] === '0') return -1;
-        if ($b['parent'] === null || $b['parent'] === '0') return 1;
-        return 0;
-    });
-    
-    debugLog("Menús después de obtener padres", [
-        'total_menus' => count($menusData),
-        'menu_ids' => array_column($menusData, 'idmenu'),
-        'padres' => array_filter($menusData, function($m) { return $m['parent'] === null || $m['parent'] === '0'; }),
-        'hijos' => array_filter($menusData, function($m) { return $m['parent'] !== null && $m['parent'] !== '0'; })
-    ]);
-    
-    // Organizar menús en estructura jerárquica
-    $menus = [];
-    $menusByParent = [];
-    $menuIndex = [];
-    
-    // Indexar todos los menús por ID
-    foreach ($menusData as $menu) {
-        $menuItem = [
-            'idmenu' => (int)$menu['idmenu'],
-            'menu' => $menu['menu'],
-            'vista' => $menu['vista'],
-            'icono' => $menu['icono'],
-            'estado' => $menu['estado'],
-            'url' => $menu['url'],
-            'ancho' => $menu['ancho'],
-            'alto' => $menu['alto'],
-            'parent' => $menu['parent'] ? (int)$menu['parent'] : null,
-            'children' => []
-        ];
         
-        $menuIndex[$menuItem['idmenu']] = $menuItem;
-    }
-    
-    // Separar menús padre de hijos
-    foreach ($menuIndex as $menuItem) {
-        if ($menuItem['parent'] === null || $menuItem['parent'] === 0) {
-            // Es un menú padre
-            $menus[] = $menuItem;
-        } else {
-            // Es un menú hijo - agregarlo al array de hijos de su padre
-            if (!isset($menusByParent[$menuItem['parent']])) {
-                $menusByParent[$menuItem['parent']] = [];
-            }
-            $menusByParent[$menuItem['parent']][] = $menuItem;
+        // Padres primero
+        if ($a['parent'] === null || $a['parent'] === '0' || $a['parent'] === 0) {
+            return -1;
         }
-    }
-    
-    // Asignar children a los menús padre
-    foreach ($menus as &$menu) {
-        if (isset($menusByParent[$menu['idmenu']])) {
-            $menu['children'] = $menusByParent[$menu['idmenu']];
-            
-            // Ordenar children por idmenu
-            usort($menu['children'], function($a, $b) {
-                return $a['idmenu'] - $b['idmenu'];
-            });
-        }
-    }
-    
-    // Ordenar menús padre por idmenu
-    usort($menus, function($a, $b) {
-        return $a['idmenu'] - $b['idmenu'];
+        return 1;
     });
     
-    debugLog("Menús estructurados finales", [
-        'total_raw' => count($menusData),
-        'total_structured' => count($menus),
-        'menus_padre' => array_map(function($m) { 
-            return [
-                'id' => $m['idmenu'], 
-                'name' => $m['menu'], 
-                'children_count' => count($m['children'])
-            ]; 
-        }, $menus),
-        'detalle_completo' => $menus
-    ]);
-    
-    sendResponse(true, 'Menús obtenidos exitosamente', [
-        'menus' => $menus,
-        'total' => count($menusData),
-        'structured_count' => count($menus)
-    ]);
-    
-} catch (Exception $e) {
-    debugLog("Error obteniendo menús", ['error' => $e->getMessage()]);
-    sendResponse(false, 'Error interno del servidor', [
-        'debug' => ENVIRONMENT === 'local' ? $e->getMessage() : null
-    ], 500);
+    return $menusData;
 }
 ?>

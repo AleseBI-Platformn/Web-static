@@ -1,5 +1,6 @@
 import React from 'react';
 import { useCurrentMenu, useAllMenus } from '../hooks/useBiAleseMenus';
+import PowerBIVisualization from './PowerBIVisualization';
 
 /**
  * Componente para mostrar menú dinámico como BiAleseCorp
@@ -7,6 +8,21 @@ import { useCurrentMenu, useAllMenus } from '../hooks/useBiAleseMenus';
  */
 export const DynamicMenuView: React.FC = () => {
   const { currentMenu, isLoading: menuLoading, error: menuError } = useCurrentMenu();
+
+  // Determinar si es una visualización de Power BI
+  const isPowerBIVisualization = () => {
+    if (!currentMenu) return false;
+    
+    // Verificar si es un menú de reportes o Power BI
+    const powerBIMenus = ['reportes', 'dashboard', 'analytics', 'metrics', 'kpi'];
+    const isPowerBI = powerBIMenus.some(menu => 
+      currentMenu.vista?.toLowerCase().includes(menu) ||
+      currentMenu.menu?.toLowerCase().includes(menu) ||
+      currentMenu.url?.toLowerCase().includes(menu)
+    );
+    
+    return isPowerBI;
+  };
 
   // SOLUCIÓN 4: Modo de visualización adaptativo
   const getViewMode = () => {
@@ -93,84 +109,79 @@ export const DynamicMenuView: React.FC = () => {
     );
   }
 
+  // Si es una visualización de Power BI, usar el componente específico
+  if (isPowerBIVisualization()) {
+    return (
+      <PowerBIVisualization 
+        menuData={currentMenu}
+        onCustomize={(settings) => {
+          console.log('Configuración de Power BI actualizada:', settings);
+          // Aquí puedes guardar la configuración en localStorage o enviarla al servidor
+          localStorage.setItem('powerbi-settings', JSON.stringify(settings));
+        }}
+      />
+    );
+  }
+
+  // Para otros tipos de menús, usar la visualización estándar
+  const displayStyle = getDisplayStyle();
+
   return (
     <div className="h-screen overflow-hidden bg-gray-50 flex flex-col">
       {/* Header fijo - sin scroll */}
       <div className="bg-white shadow-sm border-b border-gray-200 p-4 flex-shrink-0">
         <div className="max-w-7xl mx-auto">
-          {/* Título de la página (como $pagina['menu']) */}
-          <h2 className="text-3xl font-bold text-gray-900 mb-2">
-            {currentMenu.icono && <span className="mr-2">{currentMenu.icono}</span>}
-            {currentMenu.menu}
-          </h2>
-          
-          {/* Breadcrumb como BiAleseCorp */}
-          <nav className="flex" aria-label="Breadcrumb">
-            <ol className="inline-flex items-center space-x-1 md:space-x-3">
-              <li className="inline-flex items-center">
-                <a href="/dashboard" className="inline-flex items-center text-sm font-medium text-gray-700 hover:text-blue-600">
-                  🏠 Home
-                </a>
-              </li>
-              <li>
-                <div className="flex items-center">
-                  <span className="mx-2.5 text-gray-400">/</span>
-                  <span className="ml-1 text-sm font-medium text-gray-500 md:ml-2">{currentMenu.menu}</span>
-                </div>
-              </li>
-            </ol>
-          </nav>
-        </div>
-      </div>
-
-      {/* Contenido del iframe - ocupa el resto de la pantalla */}
-      <div className="flex-1 overflow-hidden">
-        {currentMenu.vista ? (
-          /* iframe que ocupa toda la pantalla disponible - SIN scroll externo */
-          (() => {
-            const style = getDisplayStyle();
-            return (
-              <iframe
-                title={currentMenu.menu}
-                src={currentMenu.vista || ''}
-                frameBorder="0"
-                allowFullScreen={true}
-                className="w-full h-full border-0"
-                style={{
-                  width: '100%',
-                  height: style.height as string
-                }}
-              />
-            );
-          })()
-        ) : (
-          <div className="flex items-center justify-center h-full bg-gradient-to-br from-gray-50 to-gray-100">
-            <div className="text-center">
-              <div className="text-6xl text-gray-300 mb-4">📊</div>
-              <h3 className="text-xl font-semibold text-gray-700 mb-2">Vista no configurada</h3>
-              <p className="text-gray-500">
-                Este menú no tiene una vista configurada aún.
-              </p>
+          <div className="flex justify-between items-center">
+            <div>
+              <h1 className="text-2xl font-bold text-gray-900">{currentMenu.menu}</h1>
+              <p className="text-gray-600">Vista: {currentMenu.vista}</p>
+            </div>
+            <div className="text-sm text-gray-500">
+              {displayStyle.mode} - {currentMenu.ancho}x{currentMenu.alto}
             </div>
           </div>
-        )}
+        </div>
       </div>
 
-      {/* Debug info (solo en desarrollo) */}
-      {process.env.NODE_ENV === 'development' && currentMenu && (
-        <div className="fixed bottom-4 right-4 bg-black bg-opacity-75 text-white p-3 rounded-lg text-xs max-w-sm">
-          <h4 className="font-bold mb-2">🔧 Debug - Menú Actual:</h4>
-          <div className="space-y-1">
-            <div><strong>ID:</strong> {currentMenu.idmenu}</div>
-            <div><strong>URL:</strong> {currentMenu.url}</div>
-            <div><strong>Vista:</strong> {currentMenu.vista ? '✅' : '❌'}</div>
-            <div><strong>Parent:</strong> {currentMenu.parent || 'null'}</div>
-            <div><strong>Dimensiones BD:</strong> {currentMenu.ancho} x {currentMenu.alto}</div>
-            <div><strong>Modo:</strong> {getDisplayStyle().mode}</div>
-            <div><strong>Dimensiones aplicadas:</strong> {getDisplayStyle().width} x {getDisplayStyle().height}</div>
+      {/* Contenido principal - con scroll */}
+      <div className="flex-1 overflow-auto">
+        <div className="max-w-7xl mx-auto p-4">
+          {/* Contenedor del contenido con dimensiones específicas */}
+          <div 
+            className="bg-white rounded-lg shadow-lg overflow-hidden"
+            style={{
+              width: displayStyle.width,
+              height: displayStyle.height,
+              maxWidth: '100%',
+              margin: '0 auto'
+            }}
+          >
+            {/* Contenido del menú */}
+            <div className="p-6">
+              <div className="text-center">
+                <div className="text-6xl text-blue-500 mb-4">📊</div>
+                <h2 className="text-2xl font-bold text-gray-800 mb-2">
+                  {currentMenu.menu}
+                </h2>
+                <p className="text-gray-600 mb-4">
+                  Vista: <strong>{currentMenu.vista}</strong>
+                </p>
+                <div className="bg-gray-100 rounded-lg p-4">
+                  <p className="text-sm text-gray-700">
+                    <strong>Dimensiones:</strong> {currentMenu.ancho} x {currentMenu.alto}
+                  </p>
+                  <p className="text-sm text-gray-700">
+                    <strong>URL:</strong> {currentMenu.url}
+                  </p>
+                  <p className="text-sm text-gray-700">
+                    <strong>Modo:</strong> {displayStyle.mode}
+                  </p>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
-      )}
+      </div>
     </div>
   );
 };
