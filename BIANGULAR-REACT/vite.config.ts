@@ -13,22 +13,23 @@ export default defineConfig({
   server: {
     port: 5173,
     host: 'localhost',
-    // Solo proxy en desarrollo
-    ...(process.env.NODE_ENV === 'development' && {
-      proxy: {
-        '/api': {
-          target: 'http://localhost:8000',
-          changeOrigin: true,
-          secure: false,
-          rewrite: (path) => path.replace(/^\/api/, '/api'),
-          configure: (proxy, options) => {
-            proxy.on('error', (err, req, res) => {
-              console.error('Proxy error:', err);
-            });
-          },
-        }
+    // Proxy configurado para desarrollo
+    proxy: {
+      '/api': {
+        target: 'http://localhost:8000',
+        changeOrigin: true,
+        secure: false,
+        rewrite: (path) => path.replace(/^\/api/, ''),
+        configure: (proxy, options) => {
+          proxy.on('error', (err, req, res) => {
+            console.error('Proxy error:', err);
+          });
+          proxy.on('proxyReq', (proxyReq, req, res) => {
+            console.log('Proxy request:', req.method, req.url, '->', proxyReq.path);
+          });
+        },
       }
-    })
+    }
   },
   build: {
     outDir: 'dist',
